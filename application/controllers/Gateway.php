@@ -19,13 +19,12 @@ class Gateway extends CI_Controller {
 		if(!$this->session->userdata('user_token')){
 			redirect('user/login');
 		}
-
+		$app_cards = '';
 		$have_responses = array('apps', 'dashboard');
 		if(in_array($page, $have_responses)){
 			$icons = array('fa-comments', 'fa-list', 'fa-shopping-cart', 'fa-support');
 			$colors = array('bg-primary', 'bg-warning', 'bg-success', 'bg-danger');
 			$responses = $this->get_responses($page);
-			$app_cards = '';
 			if(!empty($responses) && $page == 'apps'){
 				foreach ($responses as $key => $app) {
 					$app_cards .= '<div class="col-xl-3 col-sm-6 mb-3">
@@ -45,11 +44,12 @@ class Gateway extends CI_Controller {
 							          	</div>
 							        </div>';
 				}
-				$data['app_cards'] = $app_cards;
+				
 			}else if(!empty($responses) && $page == 'dashboard'){
 				$data['app_content'] = array();
 			}
 		}
+		$data['app_cards'] = $app_cards;
 		$data['content_view'] = 'pages/gateway/'.$page.'_view';
 		$data['page_title'] = 'Sermo | '.ucwords($page);
 		$this->load->view('template/template_view', $data);
@@ -58,8 +58,8 @@ class Gateway extends CI_Controller {
 	public function get_responses($page = '')
 	{	
 		$urls = array(
-			'apps' => 'getapps',
-			'dashboard' => 'getapps'
+			'apps' => 'apps',
+			'dashboard' => 'apps'
 		);
 		$responses = array();
 		$curl = new Curl();
@@ -80,7 +80,7 @@ class Gateway extends CI_Controller {
 		$curl = new Curl();
 		$curl->setHeader('Content-Type', 'Application/json');
 		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
-		$curl->post($this->api_url.'appcreate', json_encode($this->input->post()));
+		$curl->post($this->api_url.'app', json_encode($this->input->post()));
 		$redirect_url = 'apps';
 		if ($curl -> error) {
 			$message = '<div class="alert alert-danger alert-dismissible" role="alert">

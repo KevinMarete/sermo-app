@@ -34,7 +34,7 @@ class User extends CI_Controller {
 			$response = json_decode($curl -> response, TRUE);
 			if($response['status'] == 'success'){
 				$redirect_url = 'apps';
-				$this->session->set_userdata('user_token', $response['token']);
+				$this->session->set_userdata('user_token', $response['data']['token']);
 				$message = '<div class="alert alert-success alert-dismissible" role="alert">
 					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 					<strong>Success!</strong> '.$response['description'].'</div>';

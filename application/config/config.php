@@ -24,7 +24,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 |
 */
 $config['base_url'] = 'http://'. $_SERVER['SERVER_NAME'] .':'.$_SERVER['SERVER_PORT']. '/sermo-app/';
-$config['api_url'] = 'http://10.133.30.171:5000/';
+$config['api_url'] = 'http://sermo.ga/';
 
 /*
 |--------------------------------------------------------------------------

@@ -101,4 +101,72 @@ class Gateway extends CI_Controller {
 		$this->session->set_flashdata('apps_msg', $message);
 		redirect($redirect_url);
 	}
+
+	public function get_transactions($service, $app_id){
+		$service_url = strtolower($service)."_group?app=".$app_id;
+		$responses = array();
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->get($this->api_url.$service_url);
+		if (!$curl -> error) {
+			$response = json_decode($curl -> response, TRUE);
+			if($response['status'] == 'success'){
+				if(!empty($response['data'])){
+					foreach ($response['data'] as $key => $values) {
+						$responses['data'][] = array_values($values);
+						if($key == 0){
+							foreach (array_keys($values) as $column) {
+								$responses['columns'][]['title'] = $column;
+							}
+						}
+					}
+				}else{
+					$responses['data'] = array();
+					//Default columns per service
+					$columns = array(
+						'meeting' => array('title', 'description', 'organizer', 'venue', 'start_date', 'end_date', 'participants', 'facilitators'),
+						'message' => array('name', 'description'),
+						'payment' => array('name', 'description')
+					);
+					foreach ($columns[strtolower($service)] as $column) {
+						$responses['columns'][]['title'] = $column;
+					}
+				}
+			}
+		}
+		echo json_encode($responses);
+	}
+
+	public function create_transaction($service, $app_id){
+		$service_url = strtolower($service)."_group";
+		//Add appID
+		$post_data = $this->input->post();
+		$post_data['app'] = $app_id;
+		//Make App Request 
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->post($this->api_url.$service_url, json_encode($post_data));
+		$redirect_url = strtolower($service)."/".$app_id;
+		if ($curl -> error) {
+			$message = '<div class="alert alert-danger alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<strong>Error!</strong> '.$curl -> error_message.'</div>';
+		}else{
+			$response = json_decode($curl -> response, TRUE);
+			if($response['status'] == 'success'){
+				$message = '<div class="alert alert-success alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<strong>Success!</strong> '.$response['description'].'</div>';
+			}else{
+				$message = '<div class="alert alert-danger alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<strong>Error!</strong> '.$response['description'].'</div>';
+			}
+		}
+		$this->session->set_flashdata('trans_msg', $message);
+		redirect($redirect_url);
+	}
+
 }

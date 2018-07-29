@@ -100,7 +100,7 @@
         <div class="modal-body">
             <div class="form-group">
               <label for="input_name">Name</label>
-              <input class="form-control" id="input_name" type="text" aria-describedby="nameHelp" placeholder="Enter App Name" name="name" required="">
+              <input class="form-control" id="input_name" type="text" aria-describedby="nameHelp" placeholder="Enter Message Name" name="name" required="">
             </div>
             <div class="form-group">
               <label for="input_phone">Description</label>

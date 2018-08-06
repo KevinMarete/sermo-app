@@ -68,5 +68,6 @@ $route['message/(:any)'] = 'gateway/load_page/transaction/message/$1';
 $route['payment/(:any)'] = 'gateway/load_page/transaction/payment/$1';
 $route['transactions/(:any)/(:any)'] = 'gateway/get_transactions/$1/$2';
 $route['create_group/(:any)/(:any)'] = 'gateway/create_transaction/$1/$2';
+$route['participants/(:any)'] = 'gateway/get_participants/$1';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;

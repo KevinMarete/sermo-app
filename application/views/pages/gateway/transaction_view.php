@@ -144,6 +144,34 @@
     </div>
   </div>
 </div>
+<!--participantModal-->
+<div class="modal fade" id="participantModal" tabindex="-1" role="dialog" aria-labelledby="participantModal" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Participant List</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <table class="table table-bordered table-hover table-condensed" id="participant_tbl">
+              <thead>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Options</th>
+              </thead>
+              <tbody></tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary"><i class="fa fa-print"></i> Print</button>
+          <button type="button" class="btn btn-success"> <i class='fa fa-plus'></i> Add Participant</button> 
+        </div>
+    </div>
+  </div>
+</div>
 <script type="text/javascript">
   var appID = "<?php echo ucwords($this->uri->segment(2)); ?>"
   var service = "<?php echo ucwords($this->uri->segment(1)); ?>"
@@ -156,6 +184,14 @@
     //Add table based on service
     $.getJSON(dataURL, function(jsondata){
       $('#dataTableList').dataTable(jsondata);
+    });
+    //Load Participants when Modal shown
+    $("#participantModal").on("show.bs.modal", function(e) {
+        var code = $(e.relatedTarget).data('code');
+        var participantURL = "<?php echo base_url() . 'participants/'; ?>"+code
+        $.getJSON(participantURL, function(json){
+            $("#participant_tbl").dataTable(json);
+        });
     });
   });
 

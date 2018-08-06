@@ -114,18 +114,23 @@ class Gateway extends CI_Controller {
 			if($response['status'] == 'success'){
 				if(!empty($response['data'])){
 					foreach ($response['data'] as $key => $values) {
-						$responses['data'][] = array_values($values);
+						$tmp_arr = array_values($values);
+						if($service == 'Meeting'){
+							array_push($tmp_arr, "<button class='btn btn-xs btn-info' data-toggle='modal' data-target='#participantModal' data-code='".$tmp_arr[0]."'> <i class='fa fa-eye'></i> View Participants</button>");
+						}
+						$responses['data'][] = $tmp_arr;
 						if($key == 0){
 							foreach (array_keys($values) as $column) {
 								$responses['columns'][]['title'] = $column;
 							}
+							$responses['columns'][]['title'] = 'options'; //Additional Options
 						}
 					}
 				}else{
 					$responses['data'] = array();
 					//Default columns per service
 					$columns = array(
-						'meeting' => array('title', 'description', 'organizer', 'venue', 'start_date', 'end_date', 'participants', 'facilitators'),
+						'meeting' => array('title', 'description', 'organizer', 'venue', 'start_date', 'end_date', 'participants', 'facilitators', 'options'),
 						'message' => array('name', 'description'),
 						'payment' => array('name', 'description')
 					);
@@ -167,6 +172,25 @@ class Gateway extends CI_Controller {
 		}
 		$this->session->set_flashdata('trans_msg', $message);
 		redirect($redirect_url);
+	}
+
+	public function get_participants($code){
+		$participant_url = "participant?code=".$code;
+		$responses = array('data' => array(), 'destroy' => true);
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->get($this->api_url.$participant_url);
+		if (!$curl -> error) {
+			$response = json_decode($curl -> response, TRUE);
+			if($response['status'] == 'success'){
+				foreach ($response['data']  as $key => $value) {
+					$responses['data'][$key] = array($value['name'], $value['phone'], "Edit | Delete");
+				}
+				
+			}
+		}
+		echo json_encode($responses);
 	}
 
 }

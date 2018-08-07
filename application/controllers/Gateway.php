@@ -13,15 +13,17 @@ class Gateway extends CI_Controller {
 		$this->load_page('apps');
 	}
 
-	public function load_page($page = '', $id = NULL)
+	public function load_page($page = '', $app_code = NULL)
 	{	
 		//Redirect unauthorized user
 		if(!$this->session->userdata('user_token')){
 			redirect('user/login');
 		}
+		$wallet_balance = 0;
 		$app_cards = '';
 		$have_responses = array('apps', 'dashboard');
 		if(in_array($page, $have_responses)){
+
 			$icons = array('fa-comments', 'fa-list', 'fa-shopping-cart', 'fa-support');
 			$colors = array('bg-primary', 'bg-warning', 'bg-success', 'bg-danger');
 			$responses = $this->get_responses($page);
@@ -35,7 +37,7 @@ class Gateway extends CI_Controller {
 							              		</div>
 							              		<div class="mr-5">'.$app['name'].'</div>
 							            	</div>
-							            	<a class="card-footer text-white clearfix small z-1" href="'.base_url().'dashboard/'.$app['id'].'">
+							            	<a class="card-footer text-white clearfix small z-1" href="'.base_url().'dashboard/'.$app['code'].'">
 							              		<span class="float-left">View Details</span>
 							              		<span class="float-right">
 							                		<i class="fa fa-angle-right"></i>
@@ -47,19 +49,24 @@ class Gateway extends CI_Controller {
 				
 			}else if(!empty($responses) && $page == 'dashboard'){
 				$data['app_content'] = array();
+				$wallet_balance = $this->get_responses('wallet', $app_code)['balance'];
 			}
+		}else{
+			$wallet_balance = $this->get_responses('wallet', $this->uri->segment(2))['balance'];
 		}
+		$data['wallet_balance'] = $wallet_balance;
 		$data['app_cards'] = $app_cards;
 		$data['content_view'] = 'pages/gateway/'.$page.'_view';
 		$data['page_title'] = 'Sermo | '.ucwords($page);
 		$this->load->view('template/template_view', $data);
 	}
 
-	public function get_responses($page = '')
+	public function get_responses($page = '', $app_code = NULL)
 	{	
 		$urls = array(
 			'apps' => 'apps',
-			'dashboard' => 'apps'
+			'dashboard' => 'apps',
+			'wallet' => 'wallet?app='.$app_code
 		);
 		$responses = array();
 		$curl = new Curl();
@@ -102,9 +109,9 @@ class Gateway extends CI_Controller {
 		redirect($redirect_url);
 	}
 
-	public function get_transactions($service, $app_id){
-		$service_url = strtolower($service)."_group?app=".$app_id;
-		$responses = array();
+	public function get_transactions($service, $app_code){
+		$service_url = strtolower($service)."_group?app=".$app_code;
+		$responses = array('data' => array(), 'destroy' => true, 'pagingType' => 'full_numbers');
 		$curl = new Curl();
 		$curl->setHeader('Content-Type', 'Application/json');
 		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
@@ -143,17 +150,17 @@ class Gateway extends CI_Controller {
 		echo json_encode($responses);
 	}
 
-	public function create_transaction($service, $app_id){
+	public function create_transaction($service, $app_code){
 		$service_url = strtolower($service)."_group";
 		//Add appID
 		$post_data = $this->input->post();
-		$post_data['app'] = $app_id;
+		$post_data['app'] = $app_code;
 		//Make App Request 
 		$curl = new Curl();
 		$curl->setHeader('Content-Type', 'Application/json');
 		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
 		$curl->post($this->api_url.$service_url, json_encode($post_data));
-		$redirect_url = strtolower($service)."/".$app_id;
+		$redirect_url = strtolower($service)."/".$app_code;
 		if ($curl -> error) {
 			$message = '<div class="alert alert-danger alert-dismissible" role="alert">
 					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -176,7 +183,7 @@ class Gateway extends CI_Controller {
 
 	public function get_participants($code){
 		$participant_url = "participant?code=".$code;
-		$responses = array('data' => array(), 'destroy' => true);
+		$responses = array('data' => array(), 'destroy' => true, 'pagingType' => 'full_numbers');
 		$curl = new Curl();
 		$curl->setHeader('Content-Type', 'Application/json');
 		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
@@ -185,12 +192,71 @@ class Gateway extends CI_Controller {
 			$response = json_decode($curl -> response, TRUE);
 			if($response['status'] == 'success'){
 				foreach ($response['data']  as $key => $value) {
-					$responses['data'][$key] = array($value['name'], $value['phone'], "Edit | Delete");
+					$responses['data'][$key] = array($value['id'], $value['name'], $value['phone']);
 				}
-				
 			}
 		}
 		echo json_encode($responses);
+	}
+
+	public function manage_participant(){
+		$input = $this->input->post();
+		//Make App Request 
+		$participant_url = $this->api_url."participant";
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		//Evaluate type of action
+		if ($input['action'] == 'edit') {
+			unset($input['action']);
+			$curl->patch($participant_url, json_encode($input));
+			$input['action'] = 'edit';
+		} else if ($input['action'] == 'delete') {
+			unset($input['action']);
+			$curl->delete($participant_url, $input);
+			$input['action'] = 'delete';
+		} 
+		echo json_encode($input);
+	}
+
+	public function add_participant(){
+		$post_data = $this->input->post();
+		//Make App Request 
+		$participant_url = $this->api_url."participant";
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->post($participant_url, json_encode($post_data));
+
+		if ($curl -> error) {
+			$message = array('error' => $curl -> error_message);
+		}else{
+			$message = json_decode($curl -> response, TRUE);
+		}
+		echo json_encode($message);
+	}
+
+	public function manage_transaction($service){
+		$input = $this->input->post();
+		//Make App Request 
+		$transaction_url = $this->api_url.strtolower($service)."_group";
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		//Evaluate type of action
+		if ($input['action'] == 'edit') {
+			unset($input['action']);
+			$curl->patch($transaction_url, json_encode($input));
+			$input['action'] = 'edit';
+			if ($curl -> error) {
+				echo $curl -> error_message;
+			}
+		} else if ($input['action'] == 'delete') {
+			unset($input['action']);
+			$curl->delete($transaction_url, $input);
+			$input['action'] = 'delete';
+		} 
+		echo json_encode($input);
 	}
 
 }

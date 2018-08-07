@@ -6,6 +6,10 @@
 <script src="<?php echo base_url().'public/template/sbadmin/vendor/chart.js/Chart.min.js';?>"></script>
 <script src="<?php echo base_url().'public/template/sbadmin/vendor/datatables/jquery.dataTables.js';?>"></script>
 <script src="<?php echo base_url().'public/template/sbadmin/vendor/datatables/dataTables.bootstrap4.js';?>"></script>
+<!--tabledit-->
+<script src="<?php echo base_url().'public/js/jquery.tabledit.min.js';?>"></script>
+<!--tabletoCSV-->
+<script src="<?php echo base_url().'public/js/jquery.tabletoCSV.js';?>"></script>
 <!-- Custom scripts for all pages-->
 <script src="<?php echo base_url().'public/template/sbadmin/js/sb-admin.min.js';?>"></script>
 <!-- Custom scripts for this page-->

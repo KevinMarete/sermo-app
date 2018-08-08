@@ -4,6 +4,9 @@
 <link href="<?php echo base_url().'public/template/sbadmin/vendor/font-awesome/css/font-awesome.min.css';?>" rel="stylesheet" type="text/css">
 <!-- Page level plugin CSS-->
 <link href="<?php echo base_url().'public/template/sbadmin/vendor/datatables/dataTables.bootstrap4.css';?>" rel="stylesheet">
+<!-- formstone-->
+<link href="<?php echo base_url().'public/lib/formstone/css/upload.css';?>" rel="stylesheet">
+<link href="<?php echo base_url().'public/lib/formstone/css/themes/light.css';?>" rel="stylesheet">
 <!-- Custom styles for this template-->
 <link href="<?php echo base_url().'public/template/sbadmin/css/sb-admin.css';?>" rel="stylesheet">
 <!--favicon-->

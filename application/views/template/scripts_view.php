@@ -10,6 +10,11 @@
 <script src="<?php echo base_url().'public/js/jquery.tabledit.min.js';?>"></script>
 <!--tabletoCSV-->
 <script src="<?php echo base_url().'public/js/jquery.tabletoCSV.js';?>"></script>
+<!--formstone-->
+<script src="<?php echo base_url().'public/lib/formstone/js/core.js';?>"></script>
+<script src="<?php echo base_url().'public/lib/formstone/js/upload.js';?>"></script>
+<!--sweetalert-->
+<script src="<?php echo base_url().'public/js/sweetalert.min.js';?>"></script>
 <!-- Custom scripts for all pages-->
 <script src="<?php echo base_url().'public/template/sbadmin/js/sb-admin.min.js';?>"></script>
 <!-- Custom scripts for this page-->

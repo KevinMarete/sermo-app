@@ -5,10 +5,12 @@
 	  		<a href="<?php echo base_url().'apps';?>">Apps</a>
 		</li>
 		<li class="breadcrumb-item active"><?php echo $this->uri->segment(2);?></li>
-		<li class="breadcrumb-item">
-			<div class="float-right"> Wallet Balance: <b>KES.<span class="wallet_bal"><?php echo number_format($wallet_balance); ?></span></b></div>
-		</li>
 	</ol>
+	<div class="row">
+		<div class="col-md-12">
+			<div class="float-left"> Wallet Balance: <b>KES.<span class="wallet_bal"><?php echo number_format($wallet_balance); ?></span></b></div>
+		</div>
+	</div>
 
 	<!-- Icon Cards-->
 	<div class="row">

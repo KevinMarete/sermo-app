@@ -124,6 +124,14 @@ class Gateway extends CI_Controller {
 						$tmp_arr = array_values($values);
 						if($service == 'Meeting'){
 							array_push($tmp_arr, "<button class='btn btn-xs btn-info' data-toggle='modal' data-target='#participantModal' data-code='".$tmp_arr[0]."'> <i class='fa fa-eye'></i> View Participants</button>");
+						}else if($service == 'Message'){
+							array_push($tmp_arr, "<button class='btn btn-xs btn-info' data-toggle='modal' data-target='#recipientModal' data-code='".$tmp_arr[0]."'> <i class='fa fa-eye'></i> View Recipients</button>");
+						}else if($service == 'Payment'){
+							if(!$tmp_arr[0]){
+								array_push($tmp_arr, "<button class='btn btn-xs btn-info' data-toggle='modal' data-target='#payeeModal' data-code='".$tmp_arr[1]."'> <i class='fa fa-eye'></i> Upload Payees</button>");
+							}else{
+								array_push($tmp_arr, "<button class='btn btn-xs btn-success' data-toggle='modal' data-target='#paidModal' data-code='".$tmp_arr[1]."'> <i class='fa fa-dollar'></i> View Payees</button>");
+							}
 						}
 						$responses['data'][] = $tmp_arr;
 						if($key == 0){
@@ -137,9 +145,9 @@ class Gateway extends CI_Controller {
 					$responses['data'] = array();
 					//Default columns per service
 					$columns = array(
-						'meeting' => array('title', 'description', 'organizer', 'venue', 'start_date', 'end_date', 'participants', 'facilitators', 'options'),
-						'message' => array('name', 'description'),
-						'payment' => array('name', 'description')
+						'meeting' => array('code', 'description', 'end_date', 'expected participants', 'facilitators', 'id', 'name', 'organizer', 'start_date', 'venue', 'options'),
+						'message' => array('code', 'description', 'id', 'name', 'options'),
+						'payment' => array('closed', 'code', 'description', 'id', 'name', 'options')
 					);
 					foreach ($columns[strtolower($service)] as $column) {
 						$responses['columns'][]['title'] = $column;
@@ -257,6 +265,153 @@ class Gateway extends CI_Controller {
 			$input['action'] = 'delete';
 		} 
 		echo json_encode($input);
+	}
+
+	public function get_payees($code){
+		$payee_url = "draftpayment?code=".$code;
+		$responses = array('data' => array(), 'destroy' => true, 'pagingType' => 'full_numbers');
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->get($this->api_url.$payee_url);
+		if (!$curl -> error) {
+			$response = json_decode($curl -> response, TRUE);
+			if($response['status'] == 'success'){
+				foreach ($response['data']  as $key => $value) {
+					$responses['data'][$key] = array($value['id'], $value['name'], $value['phone'], $value['amount']);
+				}
+			}
+		}
+		echo json_encode($responses);
+	}
+
+	public function payee_upload(){
+		$count = 0;
+		$payment_url = 'draftpayment';
+		$post_data = array('name' => array(), 'phone' => array(), 'amount' => array(), 'payment_group' => $this->input->post('payment_code'));
+		$file = fopen($_FILES['file']['tmp_name'], 'r');
+		while (($row = fgetcsv($file, 10000, ",")) != FALSE){
+			if($count > 0){
+				$post_data['name'][] = $row[0];
+    			$post_data['phone'][] = $row[1];
+    			$post_data['amount'][] = $row[2];
+			}
+    		$count++;
+		}
+		fclose($file);
+		//Build Request
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->post($this->api_url.$payment_url, json_encode($post_data));
+		if ($curl -> error) {
+			$message = '<div class="alert alert-danger alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<strong>Error!</strong> '.$curl -> error_message.'</div>';
+		}else{
+			$response = json_decode($curl -> response, TRUE);
+			$message = '<div class="alert alert-success alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<strong>Success!</strong> '.$response['status'].'</div>';
+		}
+		echo $message;
+	}
+
+
+	public function manage_payee(){
+		$input = $this->input->post();
+		//Make App Request 
+		$payee_url = $this->api_url."draftpayment";
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		//Evaluate type of action
+		if ($input['action'] == 'edit') {
+			unset($input['action']);
+			$curl->patch($payee_url, json_encode($input));
+			$input['action'] = 'edit';
+		} else if ($input['action'] == 'delete') {
+			unset($input['action']);
+			$curl->delete($payee_url, $input);
+			$input['action'] = 'delete';
+		} 
+		echo json_encode($input);
+	}
+
+	public function get_paid($code){
+		$payee_url = "payment?code=".$code;
+		$responses = array('data' => array(), 'destroy' => true, 'pagingType' => 'full_numbers');
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->get($this->api_url.$payee_url);
+		if (!$curl -> error) {
+			$response = json_decode($curl -> response, TRUE);
+			if($response['status'] == 'success'){
+				foreach ($response['data']  as $key => $value) {
+					$responses['data'][$key] = array($value['id'], $value['name'], $value['phone'], $value['amount'], $value['status']);
+				}
+			}
+		}
+		echo json_encode($responses);
+	}
+
+	public function paid_upload(){
+		$payment_code = $this->input->post('payment_code');
+		$paid_url = "payment?code=".$payment_code;
+		$payment_url = 'payment';
+		$post_data = array('name' => array(), 'phone' => array(), 'amount' => array(), 'payment_group' => $payment_code);
+
+		//Get payees
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->get($this->api_url.$paid_url);
+		if (!$curl -> error) {
+			$response = json_decode($curl -> response, TRUE);
+			if($response['status'] == 'success'){
+				foreach ($response['data']  as $key => $value) {
+					$post_data['name'][] = $value['name'];
+    				$post_data['phone'][] = $value['phone'];
+    				$post_data['amount'][] = $value['amount'];
+				}
+			}
+		}
+
+		//Build Request
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->post($this->api_url.$payment_url, json_encode($post_data));
+		if ($curl -> error) {
+			$message = json_encode(array('status' => 'error', 'message' => $curl -> error_message));
+		}else{
+			$response = json_decode($curl -> response, TRUE);
+			if($response['status'] == 'error'){
+				$message = json_encode(array('status' => 'error', 'message' => $response['description']));
+			}else{
+				$message = json_encode(array('status' => 'success', 'message' => $response['description']));
+			}
+		}
+		echo $message;
+	}
+
+	public function get_meetings($app_code){
+		$service_url = "meeting_group?app=".$app_code;
+		$responses = array();
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->get($this->api_url.$service_url);
+		if (!$curl -> error) {
+			$response = json_decode($curl -> response, TRUE);
+			if($response['status'] == 'success'){
+				if(!empty($response['data'])){
+					$responses = $response['data'];
+				}
+			}
+		}
+		echo json_encode($responses);	
 	}
 
 }

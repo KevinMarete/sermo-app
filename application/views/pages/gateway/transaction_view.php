@@ -293,6 +293,7 @@
   var paiduploadURL = '../paid_upload'
   var paidURL = "<?php echo base_url() . 'paid/'; ?>"
   var meetingsURL = '../meetings/'+appID
+  var importParticipantURL = '../import_participants'
   var code = ''
   var columns = {
     'meeting': {identifier: [5, 'id'], editable: [[1, 'description'], [2, 'end_date'], [3, 'exp_participants'], [4, 'facilitators'], [6, 'name'], [7, 'organizer'], [8, 'start_date'], [9, 'venue']]},
@@ -385,8 +386,14 @@
         }
       });
     });
-
-
+    //Import meeting participants
+    $("#meeting_grp_importbtn").click(function(){
+        var meeting_code = $("#meeting_grps").val();
+        $.post(importParticipantURL, {'meeting_code': meeting_code, 'payment_code': code}, function(response){
+          $("#payee_msg").html(response)
+          getPayees(payeeURL+code)
+        });
+    });
   });
 
   function addLabel(className, label){
@@ -501,7 +508,7 @@
       $("#meeting_grps option").remove();
       $("#meeting_grps").append($("<option value=''>Select Meeting</option>"));          
       $.each(jsondata, function(i, v) {
-          $("#meeting_grps").append($("<option value='" + v.id + "'>" + v.name + "</option>"));
+          $("#meeting_grps").append($("<option value='" + v.code + "'>" + v.name + "</option>"));
       });
     });
   }

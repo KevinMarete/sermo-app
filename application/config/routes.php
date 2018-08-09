@@ -78,5 +78,6 @@ $route['payee_upload'] = 'gateway/payee_upload';
 $route['paid/(:any)'] = 'gateway/get_paid/$1';
 $route['paid_upload'] = 'gateway/paid_upload';
 $route['meetings/(:any)'] = 'gateway/get_meetings/$1';
+$route['import_participants'] = 'gateway/import_participants';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;

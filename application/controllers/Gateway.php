@@ -414,4 +414,45 @@ class Gateway extends CI_Controller {
 		echo json_encode($responses);	
 	}
 
+	public function import_participants(){
+		$meeting_code = $this->input->post('meeting_code');
+		$participant_url = "participant?code=".$meeting_code;
+		$payment_url = 'draftpayment';
+		$participants = array();
+		//Get participants
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->get($this->api_url.$participant_url);
+		if (!$curl -> error) {
+			$response = json_decode($curl -> response, TRUE);
+			if($response['status'] == 'success'){
+				$participants = $response['data'];
+			}
+		}
+		//Add Participants to draft meeting
+		$post_data = array('name' => array(), 'phone' => array(), 'amount' => array(), 'payment_group' => $this->input->post('payment_code'));
+		foreach ($participants as $participant) {
+			$post_data['name'][] = $participant['name'];
+    		$post_data['phone'][] = $participant['phone'];
+    		$post_data['amount'][] = 0;
+		}
+		//Build Request
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->post($this->api_url.$payment_url, json_encode($post_data));
+		if ($curl -> error) {
+			$message = '<div class="alert alert-danger alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<strong>Error!</strong> '.$curl -> error_message.'</div>';
+		}else{
+			$response = json_decode($curl -> response, TRUE);
+			$message = '<div class="alert alert-success alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<strong>Success!</strong> '.$response['status'].'</div>';
+		}
+		echo $message;
+	}
+
 }

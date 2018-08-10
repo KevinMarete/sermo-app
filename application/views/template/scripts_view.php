@@ -15,6 +15,10 @@
 <script src="<?php echo base_url().'public/lib/formstone/js/upload.js';?>"></script>
 <!--sweetalert-->
 <script src="<?php echo base_url().'public/js/sweetalert.min.js';?>"></script>
+<!--jqueryui-->
+<script src="<?php echo base_url().'public/js/jquery-ui.min.js';?>"></script>
+<!--popper-->
+<script src="<?php echo base_url().'public/js/popper.min.js';?>"></script>
 <!-- Custom scripts for all pages-->
 <script src="<?php echo base_url().'public/template/sbadmin/js/sb-admin.min.js';?>"></script>
 <!-- Custom scripts for this page-->

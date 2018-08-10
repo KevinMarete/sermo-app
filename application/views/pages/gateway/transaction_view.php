@@ -279,22 +279,106 @@
     </div>
   </div>
 </div>
+<!--recipientModal-->
+<div class="modal fade" id="recipientModal" tabindex="-1" role="dialog" aria-labelledby="recipientModal" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Recipient List</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body container-fluid">
+          <div class="row">
+            <div class="form-group col-md-12">
+              <span id="recipient_msg"></span>
+            </div>
+            <div class="form-group col-md-12">
+              <div class="target_msg alert alert-warning"></div>
+            </div>
+            <div class="form-group col-md-8">
+              <label for="meeting_grps"><b>Message Builder</b></label>
+              <textarea class="form-control txtDropTarget" id="message_box" cols="30" rows="5"> </textarea>
+            </div>
+            <div class="form-group col-md-4">
+              <label for="meeting_grps"><b>Message Variables</b></label>
+              <ul id="DragWordList"></ul>
+            </div>
+            <div class="form-group col-md-12">
+              <button type="button" class="btn btn-info btn-sm" id="preview_msg" data-toggle="popover" title="Message Preview" data-content="" data-dummydata=""><i class="fa fa-eye"></i> Preview</button>
+            </div>
+          </div>
+          <div class="row">
+            <div class="table-responsive">
+              <table class="table table-bordered table-hover table-condensed" id="recipient_tbl">
+                <caption>Recipient List>-<span id="recipient_message_code"></span></caption>
+                <thead></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-success" id="proceed_to_send"><i class="fa fa-share-square"></i> Proceed To Send</button>
+        </div>
+    </div>
+  </div>
+</div>
+<!--sentModal-->
+<div class="modal fade" id="sentModal" tabindex="-1" role="dialog" aria-labelledby="sentModal" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Sent List</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body container-fluid">
+          <div class="row">
+            <div class="table-responsive">
+              <table class="table table-bordered table-hover table-condensed" id="messages_tbl">
+                <caption>Sent List-<span id="sent_message_code"></span></caption>
+                <thead>
+                  <th>#</th>
+                  <th>Phone</th>
+                  <th>Message</th>
+                  <th>Status</th>
+                  <th>Cost</th>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+    </div>
+  </div>
+</div>
 <script type="text/javascript">
   var appID = "<?php echo ucwords($this->uri->segment(2)); ?>"
   var service = "<?php echo ucwords($this->uri->segment(1)); ?>"
   var dataURL = "../transactions/"+service+"/"+appID
   var editParticipantURL = "../manage_participant"
   var addParticipantURL = "../add_participant"
-  var participantURL = "<?php echo base_url() . 'participants/'; ?>"
-  var payeeURL = "<?php echo base_url() . 'payees/'; ?>"
+  var participantURL = "../participants/"
+  var payeeURL = "../payees/"
   var editTransactionURL = "../manage_transaction/"+service.toLowerCase()
   var editPayeeURL = "../manage_payee"
-  var payeeuploadURL = '../payee_upload'
-  var paiduploadURL = '../paid_upload'
-  var paidURL = "<?php echo base_url() . 'paid/'; ?>"
-  var meetingsURL = '../meetings/'+appID
-  var importParticipantURL = '../import_participants'
-  var code = ''
+  var payeeuploadURL = "../payee_upload"
+  var paiduploadURL = "../paid_upload"
+  var paidURL = "../paid/"
+  var recipientURL = "../recipients/"
+  var messageURL = "../messages/"
+  var meetingsURL = "../meetings/"+appID
+  var importParticipantURL = "../import_participants"
+  var recipientuploadURL = "../recipient_upload"
+  var editRecipientURL = "../manage_recipients"
+  var code = ""
   var columns = {
     'meeting': {identifier: [5, 'id'], editable: [[1, 'description'], [2, 'end_date'], [3, 'exp_participants'], [4, 'facilitators'], [6, 'name'], [7, 'organizer'], [8, 'start_date'], [9, 'venue']]},
     'message': {identifier: [2, 'id'], editable: [[1, 'description'], [3, 'name']]},
@@ -322,6 +406,16 @@
     $("#paidModal").on("show.bs.modal", function(e) {
       code = $(e.relatedTarget).data('code');
       getPaid(paidURL+code)
+    });
+    //Load Recipients when Modal shown
+    $("#recipientModal").on("show.bs.modal", function(e) {
+      code = $(e.relatedTarget).data('code');
+      getRecipients(recipientURL+code)
+    });
+    //Load Messages when Modal shown
+    $("#sentModal").on("show.bs.modal", function(e) {
+      code = $(e.relatedTarget).data('code');
+      getMessages(messageURL+code)
     });
     //Check balance limit
     $("#input_participants").on('keyup', function(){
@@ -401,6 +495,13 @@
             icon: "error",
           });
         }
+    });
+    //Show message preview
+    $('#preview_msg').popover({
+      trigger: 'focus',
+      content: function(){
+        return $(".txtDropTarget").val()
+      }
     });
   });
 
@@ -520,4 +621,106 @@
       });
     });
   }
+  function getRecipients(recipientURL){
+    $("#recipient_message_code").text(code)
+
+    //Upload payee list
+    $(".target_msg").upload({
+      accept: '.csv',
+      label: 'Click to Upload Recipient List(s)',
+      action: recipientuploadURL,
+      postData: {'message_code': code}
+    }).on("filecomplete.upload", function(e, file, response){
+      $("#recipient_msg").html(response)
+      getRecipients(recipientURL)
+    });
+
+    //Pull payee data based on payment_code
+    $.getJSON(recipientURL, function(json){
+      $("#recipient_tbl").find('td:last-child, th:last-child').remove();
+      var table = $("#recipient_tbl").dataTable(json);
+
+      $("#preview_msg").attr("data-dummydata", JSON.stringify(table.api().rows(0).data().toArray()));
+
+      var count = 0;
+      var id_list = [];
+      var edit_list = [];
+      $.each(json.columns, function(i, v){
+        if(v.title == 'id'){
+          id_list = [count, v.title]
+        }else{
+          edit_list.push([count, v.title])
+        }
+        count += 1;
+      });
+
+      $('#recipient_tbl').Tabledit({
+        url: editRecipientURL,
+        columns: {
+            identifier: id_list,
+            editable: edit_list
+        },
+        buttons: {
+          edit: {
+              class: 'btn btn-sm btn-default',
+              html: '<span class="fa fa-pencil-square-o"></span>',
+              action: 'edit'
+          },
+          delete: {
+              class: 'btn btn-sm btn-default',
+              html: '<span class="fa fa-trash-o"></span>',
+              action: 'delete'
+          }
+        },
+        onSuccess: function(data, textStatus, jqXHR) {
+          getRecipients(recipientURL)
+        }
+      });
+      //Add message builder variables
+      $("#DragWordList").empty()
+      $.each(edit_list, function(i, v){
+        $("#DragWordList").append("<li data-index='"+(i+1)+"'>"+v[1]+"</li>");
+      });
+      //Make variables draggable
+      $("#DragWordList li").draggable({helper: 'clone'});
+      $(".txtDropTarget").droppable({
+        accept: "#DragWordList li",
+        drop: function(ev, ui) {
+          $(this).insertAtCaret('{'+ui.draggable.text()+'}');
+        }
+      });
+    });
+  }
+  function getMessages(messageURL){
+    $("#sent_message_code").text(code)
+    //Pull message data based on message_code
+    $.getJSON(messageURL, function(json){
+      $("#messages_tbl").dataTable(json);
+    });  
+  }
+  $.fn.insertAtCaret = function (myValue) {
+    return this.each(function(){
+        //IE support
+        if (document.selection) {
+            this.focus();
+            sel = document.selection.createRange();
+            sel.text = myValue;
+            this.focus();
+        }
+        //MOZILLA / NETSCAPE support
+        else if (this.selectionStart || this.selectionStart == '0') {
+            var startPos = this.selectionStart;
+            var endPos = this.selectionEnd;
+            var scrollTop = this.scrollTop;
+            this.value = this.value.substring(0, startPos)+ myValue+ this.value.substring(endPos,this.value.length);
+            this.focus();
+            this.selectionStart = startPos + myValue.length;
+            this.selectionEnd = startPos + myValue.length;
+            this.scrollTop = scrollTop;
+        } else {
+            this.value += myValue;
+            this.focus();
+        }
+    });
+  };
 </script>

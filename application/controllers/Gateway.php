@@ -126,9 +126,9 @@ class Gateway extends CI_Controller {
 							array_push($tmp_arr, "<button class='btn btn-xs btn-info' data-toggle='modal' data-target='#participantModal' data-code='".$tmp_arr[0]."'> <i class='fa fa-eye'></i> View Participants</button>");
 						}else if($service == 'Message'){
 							if(!$tmp_arr[0]){
-								array_push($tmp_arr, "<button class='btn btn-xs btn-info' data-toggle='modal' data-target='#recipientModal' data-code='".$tmp_arr[0]."'> <i class='fa fa-eye'></i> Upload Recipients</button>");
+								array_push($tmp_arr, "<button class='btn btn-xs btn-info' data-toggle='modal' data-target='#recipientModal' data-code='".$tmp_arr[1]."'> <i class='fa fa-users'></i> Upload Recipients</button>");
 							}else{
-								array_push($tmp_arr, "<button class='btn btn-xs btn-success' data-toggle='modal' data-target='#sentModal' data-code='".$tmp_arr[0]."'> <i class='fa fa-dollar'></i> View Recipients</button>");
+								array_push($tmp_arr, "<button class='btn btn-xs btn-success' data-toggle='modal' data-target='#sentModal' data-code='".$tmp_arr[1]."'> <i class='fa fa-envelope-open'></i> View Recipients</button>");
 							}
 						}else if($service == 'Payment'){
 							if(!$tmp_arr[0]){
@@ -314,9 +314,15 @@ class Gateway extends CI_Controller {
 					<strong>Error!</strong> '.$curl -> error_message.'</div>';
 		}else{
 			$response = json_decode($curl -> response, TRUE);
-			$message = '<div class="alert alert-success alert-dismissible" role="alert">
+			if($response['status'] == 'success'){
+				$message = '<div class="alert alert-success alert-dismissible" role="alert">
 					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<strong>Success!</strong> '.$response['status'].'</div>';
+					<strong>Success!</strong> '.$response['description'].'</div>';
+			}else{
+				$message = '<div class="alert alert-danger alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<strong>Error!</strong> '.$response['description'].'</div>';
+			}
 		}
 		echo $message;
 	}
@@ -362,7 +368,7 @@ class Gateway extends CI_Controller {
 
 	public function paid_upload(){
 		$payment_code = $this->input->post('payment_code');
-		$paid_url = "payment?code=".$payment_code;
+		$paid_url = "draftpayment?code=".$payment_code;
 		$payment_url = 'payment';
 		$post_data = array('name' => array(), 'phone' => array(), 'amount' => array(), 'payment_group' => $payment_code);
 
@@ -460,6 +466,170 @@ class Gateway extends CI_Controller {
 				$message = '<div class="alert alert-success alert-dismissible" role="alert">
 					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 					<strong>Success!</strong> '.$response['description'].'</div>';
+			}
+		}
+		echo $message;
+	}
+
+	public function get_recipients($code){
+		$payee_url = "draftmessage?code=".$code;
+		$responses = array('data' => array(), 'destroy' => true, 'pagingType' => 'full_numbers');
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->get($this->api_url.$payee_url);
+		if (!$curl -> error) {
+			$response = json_decode($curl -> response, TRUE);
+			if($response['status'] == 'success'){
+				foreach ($response['data']  as $key => $value) {
+					$columns = array();
+					$tmp_arr = array();
+					$tmp_arr[] = $value['id'];
+					$tmp_arr[] = $value['phone'];
+					foreach ($value['variables'] as $index => $item) {
+						$columns[] = $index;
+						$tmp_arr[] = $item;
+					}
+					$responses['data'][$key] = $tmp_arr;
+					//Add titles
+					if($key == 0){
+						$responses['columns'][]['title'] = 'id';
+						$responses['columns'][]['title'] = 'phone';
+						foreach ($columns as $column) {
+							$responses['columns'][]['title'] = $column;
+						}
+					}
+				}
+			}
+		}
+		echo json_encode($responses);
+	}
+
+	public function recipient_upload(){
+		$count = 0;
+		$recipient_url = 'draftmessage';
+		$post_data = array('phone' => array(), 'variables' => array(), 'message_group' => $this->input->post('message_code'));
+		$file = fopen($_FILES['file']['tmp_name'], 'r');
+		while (($row = fgetcsv($file, 10000, ",")) != FALSE){
+			if($count == 0){
+				$columns = $row;
+			}else{
+				$variables = array();
+				foreach ($columns as $key => $column) {
+					if(strtolower($column) == 'phone'){
+						$post_data['phone'][] = str_ireplace('+254', '0', $row[$key]);
+					}else{					
+    					$variables[strtolower($column)] = $row[$key];
+					}
+				}
+				$post_data['variables'][] = $variables;
+			}
+    		$count++;
+		}
+		fclose($file);
+
+		//Build Request
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->post($this->api_url.$recipient_url, json_encode($post_data));
+		if ($curl -> error) {
+			$message = '<div class="alert alert-danger alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<strong>Error!</strong> '.$curl -> error_message.'</div>';
+		}else{
+			$response = json_decode($curl -> response, TRUE);
+			if($response['status'] == 'success'){
+				$message = '<div class="alert alert-success alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<strong>Success!</strong> '.$response['description'].'</div>';
+			}else{
+				$message = '<div class="alert alert-danger alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<strong>Error!</strong> '.$response['description'].'</div>';
+			}
+		}
+		echo $message;
+	}
+
+	public function manage_recipients(){
+		$input = $this->input->post();
+		//Make App Request 
+		$recipient_url = $this->api_url."draftmessage";
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		//Evaluate type of action
+		if ($input['action'] == 'edit') {
+			unset($input['action']);
+			//Build post_data and add variables
+			$tmp_arr = array();
+			$tmp_arr['id'] = $input['id'];
+			$tmp_arr['phone'] = $input['phone'];
+			$tmp_arr['variables'] = array_diff($input, $tmp_arr);
+			$curl->patch($recipient_url, json_encode($tmp_arr));
+			$input['action'] = 'edit';
+		} else if ($input['action'] == 'delete') {
+			unset($input['action']);
+			$curl->delete($recipient_url, $input);
+			$input['action'] = 'delete';
+		} 
+		echo json_encode($input);
+	}
+
+	public function get_messages($code){
+		$payee_url = "payment?code=".$code;
+		$responses = array('data' => array(), 'destroy' => true, 'pagingType' => 'full_numbers');
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->get($this->api_url.$payee_url);
+		if (!$curl -> error) {
+			$response = json_decode($curl -> response, TRUE);
+			if($response['status'] == 'success'){
+				foreach ($response['data']  as $key => $value) {
+					$responses['data'][$key] = array($value['id'], $value['name'], $value['phone'], $value['amount'], $value['status']);
+				}
+			}
+		}
+		echo json_encode($responses);
+	}
+
+	public function message_upload(){
+		$payment_code = $this->input->post('payment_code');
+		$recipient_url = "draftmessage?code=".$payment_code;
+		$message_url = 'message';
+		$post_data = array('name' => array(), 'phone' => array(), 'amount' => array(), 'payment_group' => $payment_code);
+
+		//Get recipients
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->get($this->api_url.$recipient_url);
+		if (!$curl -> error) {
+			$response = json_decode($curl -> response, TRUE);
+			if($response['status'] == 'success'){
+				foreach ($response['data']  as $key => $value) {
+					$post_data['name'][] = $value['name'];
+    				$post_data['phone'][] = $value['phone'];
+    				$post_data['amount'][] = $value['amount'];
+				}
+			}
+		}
+
+		//Build Request
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->post($this->api_url.$message_url, json_encode($post_data));
+		if ($curl -> error) {
+			$message = json_encode(array('status' => 'error', 'message' => $curl -> error_message));
+		}else{
+			$response = json_decode($curl -> response, TRUE);
+			if($response['status'] == 'error'){
+				$message = json_encode(array('status' => 'error', 'message' => $response['description']));
+			}else{
+				$message = json_encode(array('status' => 'success', 'message' => $response['description']));
 			}
 		}
 		echo $message;

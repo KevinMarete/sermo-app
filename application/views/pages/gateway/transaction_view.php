@@ -226,7 +226,7 @@
           <div class="row">
             <div class="table-responsive">
               <table class="table table-bordered table-hover table-condensed" id="payee_tbl">
-                <caption>Payee List>-<span id="payee_meeting_code"></span></caption>
+                <caption>Payee List>-<span id="payee_payment_code"></span></caption>
                 <thead>
                   <th>#</th>
                   <th>Name</th>
@@ -389,10 +389,18 @@
     //Import meeting participants
     $("#meeting_grp_importbtn").click(function(){
         var meeting_code = $("#meeting_grps").val();
-        $.post(importParticipantURL, {'meeting_code': meeting_code, 'payment_code': code}, function(response){
-          $("#payee_msg").html(response)
-          getPayees(payeeURL+code)
-        });
+        if(meeting_code != ''){
+          $.post(importParticipantURL, {'meeting_code': meeting_code, 'payment_code': code}, function(response){
+            $("#payee_msg").html(response)
+            getPayees(payeeURL+code)
+          });
+        }else{
+          swal({
+            title: "Error!",
+            text: "You have not selected a meeting!",
+            icon: "error",
+          });
+        }
     });
   });
 

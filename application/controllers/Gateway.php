@@ -125,7 +125,11 @@ class Gateway extends CI_Controller {
 						if($service == 'Meeting'){
 							array_push($tmp_arr, "<button class='btn btn-xs btn-info' data-toggle='modal' data-target='#participantModal' data-code='".$tmp_arr[0]."'> <i class='fa fa-eye'></i> View Participants</button>");
 						}else if($service == 'Message'){
-							array_push($tmp_arr, "<button class='btn btn-xs btn-info' data-toggle='modal' data-target='#recipientModal' data-code='".$tmp_arr[0]."'> <i class='fa fa-eye'></i> View Recipients</button>");
+							if(!$tmp_arr[0]){
+								array_push($tmp_arr, "<button class='btn btn-xs btn-info' data-toggle='modal' data-target='#recipientModal' data-code='".$tmp_arr[0]."'> <i class='fa fa-eye'></i> Upload Recipients</button>");
+							}else{
+								array_push($tmp_arr, "<button class='btn btn-xs btn-success' data-toggle='modal' data-target='#sentModal' data-code='".$tmp_arr[0]."'> <i class='fa fa-dollar'></i> View Recipients</button>");
+							}
 						}else if($service == 'Payment'){
 							if(!$tmp_arr[0]){
 								array_push($tmp_arr, "<button class='btn btn-xs btn-info' data-toggle='modal' data-target='#payeeModal' data-code='".$tmp_arr[1]."'> <i class='fa fa-eye'></i> Upload Payees</button>");
@@ -434,8 +438,8 @@ class Gateway extends CI_Controller {
 		$post_data = array('name' => array(), 'phone' => array(), 'amount' => array(), 'payment_group' => $this->input->post('payment_code'));
 		foreach ($participants as $participant) {
 			$post_data['name'][] = $participant['name'];
-    		$post_data['phone'][] = $participant['phone'];
-    		$post_data['amount'][] = 0;
+    		$post_data['phone'][] = str_ireplace('+254', '0', $participant['phone']);
+    		$post_data['amount'][] = '0';
 		}
 		//Build Request
 		$curl = new Curl();
@@ -448,9 +452,15 @@ class Gateway extends CI_Controller {
 					<strong>Error!</strong> '.$curl -> error_message.'</div>';
 		}else{
 			$response = json_decode($curl -> response, TRUE);
-			$message = '<div class="alert alert-success alert-dismissible" role="alert">
+			if($response['status'] == 'error'){
+				$message = '<div class="alert alert-danger alert-dismissible" role="alert">
 					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<strong>Success!</strong> '.$response['status'].'</div>';
+					<strong>Error!</strong> '.$response['description'].'</div>';
+			}else{
+				$message = '<div class="alert alert-success alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<strong>Success!</strong> '.$response['description'].'</div>';
+			}
 		}
 		echo $message;
 	}

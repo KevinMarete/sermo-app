@@ -473,7 +473,7 @@ class Gateway extends CI_Controller {
 
 	public function get_recipients($code){
 		$payee_url = "draftmessage?code=".$code;
-		$responses = array('data' => array(), 'destroy' => true, 'pagingType' => 'full_numbers');
+		$responses = array('data' => array(), 'destroy' => true, 'pagingType' => 'full_numbers', 'columns' => array(array('title' => 'id'), array('title' => 'phone'), array('title' => 'options')));
 		$curl = new Curl();
 		$curl->setHeader('Content-Type', 'Application/json');
 		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
@@ -490,14 +490,17 @@ class Gateway extends CI_Controller {
 						$columns[] = $index;
 						$tmp_arr[] = $item;
 					}
+					$tmp_arr[] = "<button class='btn btn-info btn-sm preview_draft'><i class='fa fa-eye'></i> Preview</button>";
 					$responses['data'][$key] = $tmp_arr;
 					//Add titles
 					if($key == 0){
+						unset($responses['columns']);
 						$responses['columns'][]['title'] = 'id';
 						$responses['columns'][]['title'] = 'phone';
 						foreach ($columns as $column) {
 							$responses['columns'][]['title'] = $column;
 						}
+						$responses['columns'][]['title'] = 'options';
 					}
 				}
 			}
@@ -578,7 +581,7 @@ class Gateway extends CI_Controller {
 	}
 
 	public function get_messages($code){
-		$payee_url = "payment?code=".$code;
+		$payee_url = "message?code=".$code;
 		$responses = array('data' => array(), 'destroy' => true, 'pagingType' => 'full_numbers');
 		$curl = new Curl();
 		$curl->setHeader('Content-Type', 'Application/json');
@@ -588,7 +591,7 @@ class Gateway extends CI_Controller {
 			$response = json_decode($curl -> response, TRUE);
 			if($response['status'] == 'success'){
 				foreach ($response['data']  as $key => $value) {
-					$responses['data'][$key] = array($value['id'], $value['name'], $value['phone'], $value['amount'], $value['status']);
+					$responses['data'][$key] = array($value['id'], $value['phone'], $value['message'], $value['status']);
 				}
 			}
 		}
@@ -596,10 +599,12 @@ class Gateway extends CI_Controller {
 	}
 
 	public function message_upload(){
-		$payment_code = $this->input->post('payment_code');
-		$recipient_url = "draftmessage?code=".$payment_code;
+		$app_code = $this->input->post('app_code');
+		$message_code = $this->input->post('message_code');
+		$draft_message = $this->input->post('draft_message');
+		$recipient_url = "draftmessage?code=".$message_code;
 		$message_url = 'message';
-		$post_data = array('name' => array(), 'phone' => array(), 'amount' => array(), 'payment_group' => $payment_code);
+		$post_data = array('to' => array(), 'message' => array(), 'app' => $app_code, 'message_group' => $message_code);
 
 		//Get recipients
 		$curl = new Curl();
@@ -610,9 +615,14 @@ class Gateway extends CI_Controller {
 			$response = json_decode($curl -> response, TRUE);
 			if($response['status'] == 'success'){
 				foreach ($response['data']  as $key => $value) {
-					$post_data['name'][] = $value['name'];
-    				$post_data['phone'][] = $value['phone'];
-    				$post_data['amount'][] = $value['amount'];
+					$post_data['to'][] = $value['phone'];
+					$message = $draft_message;
+					foreach ($value['variables'] as $i => $v) {
+						if(strpos($message, "{".$i."}") !== false){
+							$message = str_ireplace("{".$i."}", $v, $message);
+						}
+					}
+					$post_data['message'][] = $message;
 				}
 			}
 		}
@@ -636,3 +646,4 @@ class Gateway extends CI_Controller {
 	}
 
 }
+  

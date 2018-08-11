@@ -299,14 +299,11 @@
             </div>
             <div class="form-group col-md-8">
               <label for="meeting_grps"><b>Message Builder</b></label>
-              <textarea class="form-control txtDropTarget" id="message_box" cols="30" rows="5"> </textarea>
+              <textarea class="form-control txtDropTarget" id="message_box" cols="30" rows="3"> </textarea>
             </div>
             <div class="form-group col-md-4">
               <label for="meeting_grps"><b>Message Variables</b></label>
               <ul id="DragWordList"></ul>
-            </div>
-            <div class="form-group col-md-12">
-              <button type="button" class="btn btn-info btn-sm" id="preview_msg" data-toggle="popover" title="Message Preview" data-content="" data-dummydata=""><i class="fa fa-eye"></i> Preview</button>
             </div>
           </div>
           <div class="row">
@@ -346,7 +343,6 @@
                   <th>Phone</th>
                   <th>Message</th>
                   <th>Status</th>
-                  <th>Cost</th>
                 </thead>
                 <tbody></tbody>
               </table>
@@ -378,6 +374,8 @@
   var importParticipantURL = "../import_participants"
   var recipientuploadURL = "../recipient_upload"
   var editRecipientURL = "../manage_recipients"
+  var messageuploadURL = "../message_upload"
+  var table = '';
   var code = ""
   var columns = {
     'meeting': {identifier: [5, 'id'], editable: [[1, 'description'], [2, 'end_date'], [3, 'exp_participants'], [4, 'facilitators'], [6, 'name'], [7, 'organizer'], [8, 'start_date'], [9, 'venue']]},
@@ -496,13 +494,65 @@
           });
         }
     });
-    //Show message preview
-    $('#preview_msg').popover({
-      trigger: 'focus',
-      content: function(){
-        return $(".txtDropTarget").val()
+    //Show preview of draft message
+    $(document).on("click", ".preview_draft", function(){
+      var rowdata = table.api().row( $(this).closest('tr') ).data();
+      var draftmsg = $("#message_box").val();
+      $('#DragWordList li').each(function(i){
+        var searchstr = "{"+$(this).text()+"}"
+        if (draftmsg.indexOf(searchstr) != -1)
+        {
+          draftmsg = draftmsg.replace(searchstr, rowdata[$(this).attr('data-index')])
+        }
+      });
+      //Show Draft message
+      swal({
+        title: "Draft Message!",
+        text: draftmsg,
+        icon: "info",
+      });
+    });
+    //Send messages to recipients
+    $("#proceed_to_send").click(function(){
+      var draftmsg =  $("#message_box").val();
+      if(draftmsg != ''){
+        swal({
+          title: "Are you sure?",
+          text: "Your will not be able to retrieve messages sent!",
+          icon: "warning",
+          buttons: true,
+          dangerMode: true,
+        })
+        .then((willDelete) => {
+          if (willDelete) {
+            $.post(messageuploadURL, {'message_code': code, 'draft_message': draftmsg, 'app_code': appID}, function(jsondata){
+              var data = $.parseJSON(jsondata);
+              if(data.status == 'success'){
+                swal(data.message, {
+                  icon: "success",
+                });
+                //Close modal and refresh messages table
+                $("#recipientModal").modal('hide');
+                getTransactions(dataURL, columns[service.toLowerCase()])
+              }else{
+                swal(data.message, {
+                  icon: "error",
+                });
+              }
+            });
+          } else {
+            swal("Your messages are stil pending!");
+          }
+        });
+      }else{
+        swal({
+          title: "Error!",
+          text: "You have entered the draft message!",
+          icon: "error",
+        });
       }
     });
+
   });
 
   function addLabel(className, label){
@@ -638,9 +688,7 @@
     //Pull payee data based on payment_code
     $.getJSON(recipientURL, function(json){
       $("#recipient_tbl").find('td:last-child, th:last-child').remove();
-      var table = $("#recipient_tbl").dataTable(json);
-
-      $("#preview_msg").attr("data-dummydata", JSON.stringify(table.api().rows(0).data().toArray()));
+      table = $("#recipient_tbl").dataTable(json);
 
       var count = 0;
       var id_list = [];
@@ -649,7 +697,9 @@
         if(v.title == 'id'){
           id_list = [count, v.title]
         }else{
-          edit_list.push([count, v.title])
+          if(v.title != 'options'){
+            edit_list.push([count, v.title])
+          }
         }
         count += 1;
       });
@@ -677,7 +727,7 @@
         }
       });
       //Add message builder variables
-      $("#DragWordList").empty()
+      $("#DragWordList").empty();
       $.each(edit_list, function(i, v){
         $("#DragWordList").append("<li data-index='"+(i+1)+"'>"+v[1]+"</li>");
       });

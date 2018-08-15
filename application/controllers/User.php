@@ -16,7 +16,7 @@ class User extends CI_Controller {
 	public function load_page($page = '')
 	{	
 		$page_name = 'pages/user/'.$page.'_view';
-		$data['page_title'] = 'Sermo | '.ucwords($page);
+		$data['page_title'] = 'NIOJI | '.ucwords($page);
 		$this->load->view($page_name, $data);
 	}
 
@@ -35,6 +35,18 @@ class User extends CI_Controller {
 			if($response['status'] == 'success'){
 				$redirect_url = 'apps';
 				$this->session->set_userdata('user_token', $response['data']['token']);
+				//Get user information
+				$profile_url = 'profile';
+				$curl = new Curl();
+				$curl->setHeader('Content-Type', 'Application/json');
+				$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+				$curl->get($this->api_url.$profile_url);
+				if (!$curl -> error) {
+					$response = json_decode($curl -> response, TRUE);
+					if($response['status'] == 'success'){
+						$this->session->set_userdata($response['data'][0]);
+					}
+				}
 				$message = '<div class="alert alert-success alert-dismissible" role="alert">
 					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 					<strong>Success!</strong> '.$response['description'].'</div>';

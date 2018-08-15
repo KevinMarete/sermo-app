@@ -6,7 +6,7 @@
       <div class="row">
           <div class="col-md-12">
             <?php echo $this->session->flashdata('apps_msg'); ?>
-            <button class="btn btn-lg btn-primary pull-right" data-toggle="modal" data-target="#createAppModal"> <i class='fa fa-plus'></i> Create App</button> 
+            <button class="btn btn-md btn-primary pull-right" data-toggle="modal" data-target="#createAppModal"> <i class='fa fa-plus'></i> Create App</button> 
           </div>
       </div>
       

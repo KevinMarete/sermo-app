@@ -22,11 +22,10 @@
   <div class="container">
     <div class="card card-login mx-auto mt-5">
       <div class="card-header">
-        <div class="text-center mb-4">
-          <img class="mb-4" src="<?php echo base_url().'public/img/favicon.ico';?>" alt="" width="72" height="72">
-          <h1 class="h3 mb-3 font-weight-normal">SermoApp</h1>
+        <div class="text-center mb-0">
+          <img class="mb-0" src="<?php echo base_url().'public/img/logo.png';?>" alt="" width="200" height="150">
+          <h1 class="h3 mb-0 font-weight-normal">NIOJI</h1>
           <p>
-            Login
             <?php echo $this->session->flashdata('user_msg');?>
           </p>
         </div>
@@ -41,7 +40,7 @@
             <label for="inputpassword">Password</label>
             <input class="form-control" id="inputpassword" type="password" placeholder="Password" name="password" required="">
           </div>
-          <button class="btn btn-primary btn-block">Login</button>
+          <button class="btn btn-info btn-block">Login</button>
         </form>
         <div class="text-center">
           <a class="d-block small mt-3" href="<?php echo base_url().'user/register'; ?>">Register an Account</a>

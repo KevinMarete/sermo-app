@@ -52,12 +52,12 @@ class Gateway extends CI_Controller {
 				$wallet_balance = $this->get_responses('wallet', $app_code)['balance'];
 			}
 		}else{
-			$wallet_balance = $this->get_responses('wallet', $this->uri->segment(2))['balance'];
+			$wallet_balance = ( $this->uri->segment(2)) ? $this->get_responses('wallet', $this->uri->segment(2))['balance'] : 0;
 		}
 		$data['wallet_balance'] = $wallet_balance;
 		$data['app_cards'] = $app_cards;
 		$data['content_view'] = 'pages/gateway/'.$page.'_view';
-		$data['page_title'] = 'Sermo | '.ucwords($page);
+		$data['page_title'] = 'NIOJI | '.ucwords($page);
 		$this->load->view('template/template_view', $data);
 	}
 
@@ -110,7 +110,11 @@ class Gateway extends CI_Controller {
 	}
 
 	public function get_transactions($service, $app_code){
-		$service_url = strtolower($service)."_group?app=".$app_code;
+		if(strtolower($service) == 'user'){
+			$service_url = "users?app=".$app_code;
+		}else{
+			$service_url = strtolower($service)."_group?app=".$app_code;
+		}
 		$responses = array('data' => array(), 'destroy' => true, 'pagingType' => 'full_numbers');
 		$curl = new Curl();
 		$curl->setHeader('Content-Type', 'Application/json');
@@ -136,6 +140,8 @@ class Gateway extends CI_Controller {
 							}else{
 								array_push($tmp_arr, "<button class='btn btn-xs btn-success' data-toggle='modal' data-target='#paidModal' data-code='".$tmp_arr[1]."'> <i class='fa fa-dollar'></i> View Payees</button>");
 							}
+						}else if($service == 'User'){
+							array_push($tmp_arr, "");
 						}
 						$responses['data'][] = $tmp_arr;
 						if($key == 0){
@@ -150,8 +156,9 @@ class Gateway extends CI_Controller {
 					//Default columns per service
 					$columns = array(
 						'meeting' => array('code', 'description', 'end_date', 'expected participants', 'facilitators', 'id', 'name', 'organizer', 'start_date', 'venue', 'options'),
-						'message' => array('code', 'description', 'id', 'name', 'options'),
-						'payment' => array('closed', 'code', 'description', 'id', 'name', 'options')
+						'message' => array('closed', 'code', 'description', 'id', 'name', 'options'),
+						'payment' => array('closed', 'code', 'description', 'id', 'name', 'options'),
+						'user' => array('id', 'country', 'phone', 'role', 'options'),
 					);
 					foreach ($columns[strtolower($service)] as $column) {
 						$responses['columns'][]['title'] = $column;
@@ -163,7 +170,11 @@ class Gateway extends CI_Controller {
 	}
 
 	public function create_transaction($service, $app_code){
-		$service_url = strtolower($service)."_group";
+		if(strtolower($service) == 'user'){
+			$service_url = "users";
+		}else{
+			$service_url = strtolower($service)."_group";
+		}
 		//Add appID
 		$post_data = $this->input->post();
 		$post_data['app'] = $app_code;
@@ -251,7 +262,11 @@ class Gateway extends CI_Controller {
 	public function manage_transaction($service){
 		$input = $this->input->post();
 		//Make App Request 
-		$transaction_url = $this->api_url.strtolower($service)."_group";
+		if(strtolower($service) == 'user'){
+			$transaction_url = $this->api_url."users";
+		}else{
+			$transaction_url = $this->api_url.strtolower($service)."_group";	
+		}
 		$curl = new Curl();
 		$curl->setHeader('Content-Type', 'Application/json');
 		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
@@ -643,6 +658,107 @@ class Gateway extends CI_Controller {
 			}
 		}
 		echo $message;
+	}
+
+	public function topup_wallet($app_id){
+		$update_data = array(
+			'app' => $app_id,
+			'amount' => $this->input->post('amount')
+		);
+		//Make App Request 
+		$topup_url = $this->api_url."wallet";
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->patch($topup_url, json_encode($update_data, JSON_NUMERIC_CHECK));
+
+		if ($curl -> error) {
+			$message = '<div class="alert alert-danger alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<strong>Error!</strong> '.$curl -> error_message.'</div>';
+		}else{
+			$response = json_decode($curl -> response, TRUE);
+			if($response['status'] == 'success'){
+				$message = '<div class="alert alert-success alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<strong>Success!</strong> '.$response['description'].'</div>';
+			}else{
+				$message = '<div class="alert alert-danger alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<strong>Error!</strong> '.$response['description'].'</div>';
+			}
+		}
+		$this->session->set_flashdata('dashboard_msg', $message);
+		redirect("dashboard/".$app_id);
+	}
+
+	public function get_app($app_id){
+		$app_url = 'apps';
+		$responses = array('name' => '', 'description' => '');
+		//Get recipients
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->get($this->api_url.$app_url);
+		if (!$curl -> error) {
+			$response = json_decode($curl -> response, TRUE);
+			if($response['status'] == 'success'){
+				foreach ($response['data'] as $key => $value) {
+					if($value['code'] == $app_id){
+						$responses['name'] = $value['name'];
+						$responses['description'] = $value['description'];
+					}
+				}
+			}
+		}
+		echo json_encode($responses);
+	}
+
+	public function update_app($app_id){
+		$app_url = 'app';
+		$update_data = array('name' => $this->input->post('name'), 'description' =>  $this->input->post('description'), 'app' => $app_id);
+		//Get recipients
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->patch($this->api_url.$app_url, json_encode($update_data));
+		if ($curl -> error) {
+			$message = '<div class="alert alert-danger alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<strong>Error!</strong> '.$curl -> error_message.'</div>';
+		}else{
+			$response = json_decode($curl -> response, TRUE);
+			if($response['status'] == 'success'){
+				$message = '<div class="alert alert-success alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<strong>Success!</strong> '.$response['description'].'</div>';
+			}else{
+				$message = '<div class="alert alert-danger alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<strong>Error!</strong> '.$response['description'].'</div>';
+			}
+		}
+		$this->session->set_flashdata('dashboard_msg', $message);
+		redirect("dashboard/".$app_id);
+	}
+
+	public function delete_app($app_id){
+		$responses = array();
+		//Make App Request 
+		$app_url = $this->api_url."app";
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->delete($app_url, array('app' => $app_id));
+
+		if ($curl -> error) {
+			$responses['status'] = 'error';
+			$responses['message'] =  $curl -> error_message;
+		}else{
+			$responses['status'] = 'success';
+			$responses['message'] =  'App was deleted successfully!';
+		}
+		echo json_encode($responses);
 	}
 
 }

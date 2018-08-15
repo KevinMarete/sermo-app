@@ -355,6 +355,46 @@
     </div>
   </div>
 </div>
+<!--userModal-->
+<div class="modal fade" id="createUserModal" tabindex="-1" role="dialog" aria-labelledby="createUserModal" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <form action="<?php echo base_url().'create_group/'.$this->uri->segment(1).'/'.$this->uri->segment(2);?>" method="POST">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Add New User</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body row">
+            <div class="form-group col-sm-12">
+              <label for="input_name">Name</label>
+              <input class="form-control" id="input_name" type="text" aria-describedby="nameName" placeholder="Enter Name" name="name" required="">
+            </div>
+            <div class="form-group col-sm-12">
+              <label for="input_email">Email</label>
+              <input class="form-control" id="input_email" type="email" aria-describedby="nameEmail" placeholder="Enter Email" name="email" required="">
+            </div>
+            <div class="form-group col-sm-12">
+              <label for="input_phone">Phone</label>
+              <input class="form-control" id="input_phone" type="number" aria-describedby="namePhone" placeholder="Enter Phone" name="phone" required="">
+            </div>
+            <div class="form-group col-sm-12">
+              <label for="input_role">Role</label>
+              <select class="form-control" id="select_role" aria-describedby=roleHelp" name="role" required="">
+                <option value="">Select One</option>
+                <option value="1">Super Administrator</option>
+              </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="submit" id="message_grp_btn" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 <script type="text/javascript">
   var appID = "<?php echo ucwords($this->uri->segment(2)); ?>"
   var service = "<?php echo ucwords($this->uri->segment(1)); ?>"
@@ -380,7 +420,8 @@
   var columns = {
     'meeting': {identifier: [5, 'id'], editable: [[1, 'description'], [2, 'end_date'], [3, 'exp_participants'], [4, 'facilitators'], [6, 'name'], [7, 'organizer'], [8, 'start_date'], [9, 'venue']]},
     'message': {identifier: [2, 'id'], editable: [[1, 'description'], [3, 'name']]},
-    'payment': {identifier: [3, 'id'], editable: [[2, 'description'], [4, 'name']]}
+    'payment': {identifier: [3, 'id'], editable: [[2, 'description'], [4, 'name']]},
+    'user': {identifier: [0, 'user'], editable: [[1, 'name'], [2, 'phone'], [3, 'role']]},
   }
   $(function(){
     //Add dynamic label based on service

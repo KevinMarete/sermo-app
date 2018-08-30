@@ -11,6 +11,24 @@
 			<?php echo $this->session->flashdata('dashboard_msg'); ?>
 		</div>
 	</div>
+	<!--Settings-->
+	<div class="row">
+		<div class="col-md-4">
+      		<div class="float-left"> Wallet Balance: <b>KES.<span class="wallet_bal"><?php echo number_format($wallet_balance); ?></span></b></div>
+    	</div>
+		<div class="col-xl-8 col-sm-8 mb-4">
+			<div class="btn-group pull-right" role="group" aria-label="Basic example">
+				<button type="button" class="btn btn-success" data-toggle="modal" data-target="#topupModal">
+					<i class="fa fa-fw fa-dollar"></i> Wallet</button>
+				<a type="button" class="btn btn-info" href="<?php echo base_url().'user/'.$this->uri->segment(2);?>">
+					<i class="fa fa-fw fa-users"></i> Users</a>
+				<button type="button" class="btn btn-danger" data-toggle="modal" data-target="#settingModal">
+					<i class="fa fa-fw fa-cog"></i> Settings
+				</button>
+			</div>
+		</div>
+	</div>
+
 	<!-- Icon Cards-->
 	<div class="row">
 		<div class="col-xl-4 col-sm-6 mb-4">
@@ -55,56 +73,6 @@
 	            </div>
 	            <a class="card-footer text-white clearfix small z-1" href="<?php echo base_url().'payment/'.$this->uri->segment(2);?>">
 	              	<span class="float-left">Manage Payments</span>
-	              	<span class="float-right">
-	                	<i class="fa fa-angle-right"></i>
-	              	</span>
-	            </a>
-          </div>
-		</div>
-	</div>
-	<div class="row">
-		<div class="col-xl-4 col-sm-6 mb-4">
-			<div class="card text-white bg-success o-hidden h-100">
-	            <div class="card-body">
-	              	<div class="card-body-icon">
-	                	<i class="fa fa-fw fa-dollar"></i>
-	              	</div>
-	            <div class="mr-5">Wallet (Balance: KES.<?php echo number_format($wallet_balance); ?>)</div>
-	            </div>
-	            <a class="card-footer text-white clearfix small z-1" data-toggle="modal" data-target="#topupModal">
-	              	<span class="float-left">Topup Wallet</span>
-	              	<span class="float-right">
-	                	<i class="fa fa-angle-right"></i>
-	              	</span>
-	            </a>
-          </div>
-		</div>
-		<div class="col-xl-4 col-sm-6 mb-4">
-			<div class="card text-white bg-info o-hidden h-100">
-				<div class="card-body">
-					<div class="card-body-icon">
-						<i class="fa fa-fw fa-users"></i>
-					</div>
-					<div class="mr-5">Users</div>
-				</div>
-				<a class="card-footer text-white clearfix small z-1" href="<?php echo base_url().'user/'.$this->uri->segment(2);?>">
-					<span class="float-left">Manage App Users</span>
-					<span class="float-right">
-						<i class="fa fa-angle-right"></i>
-					</span>
-				</a>
-          </div>
-		</div>
-		<div class="col-xl-4 col-sm-6 mb-4">
-			<div class="card text-white bg-danger o-hidden h-100">
-	            <div class="card-body">
-	              	<div class="card-body-icon">
-	                	<i class="fa fa-fw fa-cog"></i>
-	              	</div>
-	              	<div class="mr-5">Settings</div>
-	            </div>
-	            <a class="card-footer text-white clearfix small z-1" data-toggle="modal" data-target="#settingModal">
-	              	<span class="float-left">Manage App</span>
 	              	<span class="float-right">
 	                	<i class="fa fa-angle-right"></i>
 	              	</span>

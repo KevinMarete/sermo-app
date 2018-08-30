@@ -367,9 +367,13 @@
           </button>
         </div>
         <div class="modal-body row">
-            <div class="form-group col-sm-12">
-              <label for="input_name">Name</label>
-              <input class="form-control" id="input_name" type="text" aria-describedby="nameName" placeholder="Enter Name" name="name" required="">
+            <div class="form-group col-sm-6">
+              <label for="input_name">Firstname</label>
+              <input class="form-control" id="input_firstname" type="text" aria-describedby="nameFirstname" placeholder="Enter Firstname" name="firstname" required="">
+            </div>
+            <div class="form-group col-sm-6">
+              <label for="input_name">Lastname</label>
+              <input class="form-control" id="input_lastname" type="text" aria-describedby="nameLastname" placeholder="Enter Lastname" name="lastname" required="">
             </div>
             <div class="form-group col-sm-12">
               <label for="input_email">Email</label>
@@ -384,6 +388,8 @@
               <select class="form-control" id="select_role" aria-describedby=roleHelp" name="role" required="">
                 <option value="">Select One</option>
                 <option value="1">Super Administrator</option>
+                <option value="2">Administrator</option>
+                <option value="3">User</option>
               </select>
             </div>
         </div>
@@ -403,7 +409,7 @@
   var addParticipantURL = "../add_participant"
   var participantURL = "../participants/"
   var payeeURL = "../payees/"
-  var editTransactionURL = "../manage_transaction/"+service.toLowerCase()
+  var editTransactionURL = "../manage_transaction/"+service.toLowerCase()+"/"+appID
   var editPayeeURL = "../manage_payee"
   var payeeuploadURL = "../payee_upload"
   var paiduploadURL = "../paid_upload"
@@ -421,7 +427,7 @@
     'meeting': {identifier: [5, 'id'], editable: [[1, 'description'], [2, 'end_date'], [3, 'exp_participants'], [4, 'facilitators'], [6, 'name'], [7, 'organizer'], [8, 'start_date'], [9, 'venue']]},
     'message': {identifier: [2, 'id'], editable: [[1, 'description'], [3, 'name']]},
     'payment': {identifier: [3, 'id'], editable: [[2, 'description'], [4, 'name']]},
-    'user': {identifier: [0, 'user'], editable: [[1, 'name'], [2, 'phone'], [3, 'role']]},
+    'user': {identifier: [3, 'id'], editable: [[1, 'email'], [2, 'firstname'], [4, 'lastname'], [5, 'phone'], [6, 'role', '{"1": "Super Administrator", "2": "Administrator", "3": "User"}']]},
   }
   $(function(){
     //Add dynamic label based on service

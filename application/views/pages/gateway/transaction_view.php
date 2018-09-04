@@ -599,7 +599,15 @@
         });
       }
     });
-
+    //Load Meeting Info
+    $(document).on("click", ".meeting-info", function(){
+      var meeting_code = $(this).data('code')
+      swal({
+        title: "Instructions!",
+        text: "To join a meeting send an SMS to 0707000111 with the message: "+meeting_code+"@FIRSTNAME LASTNAME",
+        icon: "warning",
+      });
+    });
   });
 
   function addLabel(className, label){

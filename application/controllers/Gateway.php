@@ -127,7 +127,7 @@ class Gateway extends CI_Controller {
 					foreach ($response['data'] as $key => $values) {
 						$tmp_arr = array_values($values);
 						if($service == 'Meeting'){
-							array_push($tmp_arr, "<button class='btn btn-xs btn-info' data-toggle='modal' data-target='#participantModal' data-code='".$tmp_arr[0]."'> <i class='fa fa-eye'></i> View Participants</button>");
+							array_push($tmp_arr, "<button class='btn btn-xs btn-info' data-toggle='modal' data-target='#participantModal' data-code='".$tmp_arr[0]."'> <i class='fa fa-eye'></i>Participants</button><button class='btn btn-xs btn-warning meeting-info' data-code='".$tmp_arr[0]."'> <i class='fa fa-code'></i> Instructions</button>");
 						}else if($service == 'Message'){
 							if(!$tmp_arr[0]){
 								array_push($tmp_arr, "<button class='btn btn-xs btn-info' data-toggle='modal' data-target='#recipientModal' data-code='".$tmp_arr[1]."'> <i class='fa fa-users'></i> Upload Recipients</button>");

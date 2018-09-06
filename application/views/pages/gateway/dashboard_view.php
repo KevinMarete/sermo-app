@@ -93,7 +93,11 @@
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body">            
+        	<div class="form-group">
+              <label for="input_phone">Phone</label>
+              <input class="form-control" id="input_phone" type="number" aria-describedby="phoneHelp" name="phone" required="" value="<?php echo $this->session->userdata('phone'); ?>">
+            </div>
             <div class="form-group">
               <label for="input_amount">Amount</label>
               <input class="form-control" id="input_amount" type="number" aria-describedby="amountHelp" name="amount" required="" min="100" max="70000">

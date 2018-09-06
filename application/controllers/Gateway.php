@@ -384,7 +384,7 @@ class Gateway extends CI_Controller {
 
 	public function get_paid($code){
 		$payee_url = "payment?code=".$code;
-		$responses = array('data' => array(), 'destroy' => true, 'pagingType' => 'full_numbers');
+		$responses = array('data' => array(), 'destroy' => true, 'pagingType' => 'full_numbers', 'dom' => 'Bfrtip', 'buttons' => array(array('extend' => 'excelHtml5', 'title' => 'NIOJI Payment Group-'.$code), array('extend' => 'pdfHtml5', 'title' => 'NIOJI Payment Group-'.$code)));
 		$curl = new Curl();
 		$curl->setHeader('Content-Type', 'Application/json');
 		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
@@ -393,7 +393,7 @@ class Gateway extends CI_Controller {
 			$response = json_decode($curl -> response, TRUE);
 			if($response['status'] == 'success'){
 				foreach ($response['data']  as $key => $value) {
-					$responses['data'][$key] = array($value['id'], $value['name'], $value['phone'], $value['amount'], $value['status']);
+					$responses['data'][$key] = array($value['id'], $value['name'], $value['phone'], $value['amount'], $value['status'], $value['mpesa_code'], $value['recipient_info']);
 				}
 			}
 		}
@@ -682,14 +682,15 @@ class Gateway extends CI_Controller {
 	public function topup_wallet($app_id){
 		$update_data = array(
 			'app' => $app_id,
-			'amount' => $this->input->post('amount')
+			'amount' => $this->input->post('amount'),
+			'phone' => $this->input->post('phone'),
 		);
 		//Make App Request 
 		$topup_url = $this->api_url."wallet";
 		$curl = new Curl();
 		$curl->setHeader('Content-Type', 'Application/json');
 		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
-		$curl->patch($topup_url, json_encode($update_data, JSON_NUMERIC_CHECK));
+		$curl->post($topup_url, json_encode($update_data, JSON_NUMERIC_CHECK));
 
 		if ($curl -> error) {
 			$message = '<div class="alert alert-danger alert-dismissible" role="alert">

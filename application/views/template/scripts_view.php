@@ -19,6 +19,14 @@
 <script src="<?php echo base_url().'public/js/jquery-ui.min.js';?>"></script>
 <!--popper-->
 <script src="<?php echo base_url().'public/js/popper.min.js';?>"></script>
+<!--dataTable Buttons-->
+<script src="<?php echo base_url().'public/js/dataTables.buttons.min.js';?>"></script>
+<script src="<?php echo base_url().'public/js/buttons.flash.min.js';?>"></script>
+<script src="<?php echo base_url().'public/js/jszip.min.js';?>"></script>
+<script src="<?php echo base_url().'public/js/pdfmake.min.js';?>"></script>
+<script src="<?php echo base_url().'public/js/vfs_fonts.js';?>"></script>
+<script src="<?php echo base_url().'public/js/buttons.html5.min.js';?>"></script>
+<script src="<?php echo base_url().'public/js/buttons.print.min.js';?>"></script>
 <!-- Custom scripts for all pages-->
 <script src="<?php echo base_url().'public/template/sbadmin/js/sb-admin.min.js';?>"></script>
 <!-- Custom scripts for this page-->

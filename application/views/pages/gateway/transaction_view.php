@@ -143,6 +143,11 @@
               <label for="input_phone">Description</label>
               <textarea class="form-control" id="input_description" aria-describedby=descriptionHelp" placeholder="Enter Description" cols="10" rows="4" name="description" required=""></textarea>
             </div>
+            <div class="form-group">
+              <label for="input_withdraw">Add Withdrawal Fee to Amount?</label>
+                <input type="radio" name="withdrawal" value="1" checked="checked"> Yes
+                <input type="radio" name="withdrawal" value="0"> No
+            </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -267,6 +272,8 @@
                   <th>Phone</th>
                   <th>Amount</th>
                   <th>Status</th>
+                  <th>MPESA Code</th>
+                  <th>Recipient Name</th>
                 </thead>
                 <tbody></tbody>
               </table>
@@ -514,6 +521,7 @@
               //Close modal and refresh payment table
               $("#payeeModal").modal('hide');
               getTransactions(dataURL, columns[service.toLowerCase()])
+              window.location.href = appID; //Refresh page on payment
             }else{
               swal(data.message, {
                 icon: "error",

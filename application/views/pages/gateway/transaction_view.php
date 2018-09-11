@@ -57,12 +57,12 @@
               <input class="form-control" id="input_title" type="text" aria-describedby="nameTitle" placeholder="Enter Title" name="title" required="">
             </div>
             <div class="form-group col-sm-12">
-              <label for="input_phone">Description</label>
-              <textarea class="form-control" id="input_description" aria-describedby=descriptionHelp" placeholder="Enter Description" cols="10" rows="4" name="description" required=""></textarea>
+              <label for="input_description">Description</label>
+              <textarea class="form-control" id="input_description" aria-describedby=descriptionHelp" placeholder="Enter Description" rows="3" name="description" required=""></textarea>
             </div>
             <div class="form-group col-sm-6">
               <label for="input_organizer">Organizer</label>
-              <input class="form-control" id="input_organizer" type="text" aria-describedby="organizerHelp" placeholder="Enter Organizer" name="organizer" required="">
+              <input class="form-control col-sm-12" id="input_organizer" type="text" aria-describedby="organizerHelp" placeholder="Enter Organizer" name="organizer" required="">
             </div>
             <div class="form-group col-sm-6">
               <label for="input_venue">Venue</label>
@@ -70,11 +70,11 @@
             </div>
             <div class="form-group col-sm-6">
               <label for="input_start_date">StartDate</label>
-              <input class="form-control" id="input_start_date" type="date" aria-describedby="nameStartDate" placeholder="Enter StartDate" name="start_date" required="">
+              <input class="form-control input_date" id="input_start_date" type="text" aria-describedby="nameStartDate" placeholder="Enter StartDate" name="start_date" required="">
             </div>
             <div class="form-group col-sm-6">
               <label for="input_start_date">EndDate</label>
-              <input class="form-control" id="input_end_date" type="date" aria-describedby="nameEndDate" placeholder="Enter EndDate" name="end_date" required="">
+              <input class="form-control input_date" id="input_end_date" type="text" aria-describedby="nameEndDate" placeholder="Enter EndDate" name="end_date" required="">
             </div>
             <div class="form-group col-sm-6">
               <label for="input_participants">Expected No. of Participants</label>
@@ -84,6 +84,32 @@
             <div class="form-group col-sm-6">
               <label for="input_facilitators">Facilitators</label>
               <input class="form-control" id="input_facilitators" type="text" aria-describedby="nameFacilitators" placeholder="Enter Facilitators" name="facilitators" required="">
+            </div>
+            <div class="form-group col-sm-6">
+              <label>Participant Mandatory Data</label>
+              <div class="form-check disabled">
+                <label class="form-check-label">
+                  <input type="checkbox" class="form-check-input" name="participant_name" value="meeting_code" checked="checked" disabled>Meeting Code
+                </label>
+              </div>
+              <div class="form-check disabled">
+                <label class="form-check-label">
+                  <input type="checkbox" class="form-check-input" name="participant_name" value="participant_name" checked="checked" disabled>Participant Name
+                </label>
+              </div>
+            </div>
+            <div class="form-group col-sm-6">
+              <label>Participant Optional Data</label>
+              <div class="form-check">
+                <label class="form-check-label">
+                  <input type="checkbox" class="form-check-input" name="id_number" value="1">ID Number
+                </label>
+              </div>
+              <div class="form-check">
+                <label class="form-check-label">
+                  <input type="checkbox" class="form-check-input" name="kra_pin" value="1">KRA PIN
+                </label>
+              </div>
             </div>
         </div>
         <div class="modal-footer">
@@ -439,6 +465,11 @@
   $(function(){
     //Add dynamic label based on service
     addLabel(".transaction_type", service)
+    //Add datepickers
+    $(".input_date").datepicker({
+      format: 'yyyy-mm-dd',
+      startDate: '1d'
+    });
     //Add target create modal button
     $("#modalBtn").attr("data-target", "#create"+service+"Modal")
     //Add table based on service

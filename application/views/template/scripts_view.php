@@ -27,6 +27,8 @@
 <script src="<?php echo base_url().'public/js/vfs_fonts.js';?>"></script>
 <script src="<?php echo base_url().'public/js/buttons.html5.min.js';?>"></script>
 <script src="<?php echo base_url().'public/js/buttons.print.min.js';?>"></script>
+<!--datepicker-->
+<script src="<?php echo base_url().'public/lib/bootstrap-datepicker-1.6.4/js/bootstrap-datepicker.min.js'; ?>"></script>
 <!-- Custom scripts for all pages-->
 <script src="<?php echo base_url().'public/template/sbadmin/js/sb-admin.min.js';?>"></script>
 <!-- Custom scripts for this page-->

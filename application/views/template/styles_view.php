@@ -7,6 +7,8 @@
 <!-- formstone-->
 <link href="<?php echo base_url().'public/lib/formstone/css/upload.css';?>" rel="stylesheet">
 <link href="<?php echo base_url().'public/lib/formstone/css/themes/light.css';?>" rel="stylesheet">
+<!--datepicker-->
+<link href="<?php echo base_url() . 'public/lib/bootstrap-datepicker-1.6.4/css/bootstrap-datepicker.min.css'; ?>" rel="stylesheet" type="text/css">
 <!-- Custom styles for this template-->
 <link href="<?php echo base_url().'public/template/sbadmin/css/sb-admin.css';?>" rel="stylesheet">
 <!--favicon-->

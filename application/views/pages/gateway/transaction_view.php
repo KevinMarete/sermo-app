@@ -195,36 +195,42 @@
         </div>
         <div class="modal-body container-fluid">
           <div class="row">
-            <div class="form-group col-md-5">
+            <div class="form-group col-md-3">
               <label for="participant_pname">Name</label>
-              <input class="form-control" id="participant_name" type="text" aria-describedby="nameHelp" placeholder="Enter Participant Name" name="name" cata-toggle="tooltip" data-placement="top" title="Required! Participant Name">
+              <input class="form-control" id="participant_name" type="text" aria-describedby="nameHelp" placeholder="Name" name="name" cata-toggle="tooltip" data-placement="top" title="Required! Participant Name">
             </div>
-            <div class="form-group col-md-5">
+            <div class="form-group col-md-3">
               <label for="participant_phone">Phone</label>
-              <input class="form-control" id="participant_phone" type="text" aria-describedby="nameHelp" placeholder="Enter Participant Phone" name="phone" cata-toggle="tooltip" data-placement="top" title="Required! Participant Phone">
+              <input class="form-control" id="participant_phone" type="text" aria-describedby="nameHelp" placeholder="Phone" name="phone" cata-toggle="tooltip" data-placement="top" title="Required! Participant Phone">
             </div>
-            <div class="form-group col-md-2">
+            <div class="form-group col-md-2 idcard">
+              <label for="participant_phone">ID Number</label>
+              <input class="form-control" id="participant_idnumber" type="text" aria-describedby="idnumberHelp" placeholder="ID#" name="id_number" cata-toggle="tooltip" data-placement="top" title="Required! Participant ID_NUMBER">
+            </div>
+            <div class="form-group col-md-3 krapin">
+              <label for="participant_phone">KRA PIN</label>
+              <input class="form-control" id="participant_krapin" type="text" aria-describedby="krapinHelp" placeholder="KRA PIN" name="kra_pin" cata-toggle="tooltip" data-placement="top" title="Required! Participant KRA_PIN">
+            </div>
+            <div class="form-group col-md-1">
               <label for="participant_savebtn">#</label>
-              <button type="button" class="form-control btn btn-success btn-md" id="participant_savebtn"> <i class='fa fa-plus'></i> Save</button> 
+              <button type="button" class="form-control btn btn-success btn-md" id="participant_savebtn"> <i class='fa fa-plus'></i></button> 
             </div>
           </div>
           <div class="row">
             <div class="table-responsive">
-              <table class="table table-bordered table-hover table-condensed" id="participant_tbl">
-                <caption>Participant List-<span id="participant_meeting_code"></span></caption>
-                <thead>
-                  <th>#</th>
-                  <th>Name</th>
-                  <th>Phone</th>
-                  <th>Options</th>
-                </thead>
-                <tbody></tbody>
-              </table>
+              <div id="participantDIV">
+                <table class="table table-bordered table-hover table-condensed" id="participant_tbl" width="100%" cellspacing="0">
+                  <caption>Participant List-<span id="participant_meeting_code"></span></caption>
+                  <thead></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-warning krapin" id="participant_validate"><i class="fa fa-check"></i> Validate</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fa fa-window-close"></i> Close</button>
           <button type="button" class="btn btn-primary" id="participant_download"><i class="fa fa-download"></i> Download</button>
         </div>
     </div>
@@ -454,6 +460,7 @@
   var recipientuploadURL = "../recipient_upload"
   var editRecipientURL = "../manage_recipients"
   var messageuploadURL = "../message_upload"
+  var validateURL = "../validate_participant"
   var table = '';
   var code = ""
   var columns = {
@@ -477,7 +484,9 @@
     //Load Participants when Modal shown
     $("#participantModal").on("show.bs.modal", function(e) {
       code = $(e.relatedTarget).data('code');
-      getParticipants(participantURL+code)
+      idcard = $(e.relatedTarget).data('idcard') || 0;
+      krapin = $(e.relatedTarget).data('krapin') || 0;
+      getParticipants(participantURL+code+'/'+idcard+'/'+krapin)
     });
     //Load Payees when Modal shown
     $("#payeeModal").on("show.bs.modal", function(e) {
@@ -515,16 +524,24 @@
     $('#participant_savebtn').click(function(){
       var name = $("#participant_name").val()
       var phone = $("#participant_phone").val()
+      var idnumber = $("#participant_idnumber").val()
+      var kra = $("#participant_krapin").val()
       //Validate fields not empty
       if(name == ''){
         $('#participant_name').tooltip('show');
       }if(phone == ''){
         $('#participant_phone').tooltip('show');
+      }if(idcard == 1 && idnumber == ''){
+        $('#participant_idnumber').tooltip('show');
+      }if(krapin == 1&& kra == ''){
+        $('#participant_krapin').tooltip('show');
       }else{
-        $.post(addParticipantURL, {'name': name, 'phone': phone, 'code': code}, function(){
-          $("#participant_name").val('')
-          $("#participant_phone").val('')
-          getParticipants(participantURL+code)
+        $.post(addParticipantURL, {'name': name, 'phone': phone, 'code': code, 'id_number': idnumber, 'kra_pin': kra}, function(){
+          $("#participant_name").val('');
+          $("#participant_phone").val('');
+          $("#participant_idnumber").val('');
+          $("#participant_krapin").val('');
+          getParticipants(participantURL+code+'/'+idcard+'/'+krapin)
         });
       }
     });
@@ -640,11 +657,51 @@
     });
     //Load Meeting Info
     $(document).on("click", ".meeting-info", function(){
-      var meeting_code = $(this).data('code')
+      var meeting_code = $(this).data('code');
+      var id_card = $(this).data('idcard');
+      var kra_pin = $(this).data('krapin');
+      var instruct_msg = "To join a meeting send an SMS to 0707000111 with the message: "+meeting_code+"@FIRSTNAME LASTNAME";
+      if(id_card == 1){
+        instruct_msg = instruct_msg + "@ID_NUMBER";
+      }
+      if(kra_pin == 1){
+        instruct_msg = instruct_msg + "@KRA_PIN";
+      }
+
       swal({
         title: "Instructions!",
-        text: "To join a meeting send an SMS to 0707000111 with the message: "+meeting_code+"@FIRSTNAME LASTNAME",
+        text: instruct_msg,
         icon: "warning",
+      });
+    });
+    //validate participant
+    $("#participant_validate").click(function(){
+      swal({
+        title: "Attention!",
+        text: "You are abbout to validate the participants' KRA PIN(S)",
+        icon: "warning",
+        buttons: true,
+        dangerMode: true,
+      })
+      .then((willDelete) => {
+        if (willDelete) {
+          $.post(validateURL, {'meeting_code': code}, function(jsondata){
+            var data = $.parseJSON(jsondata);
+            if(data.status == 'success'){
+              swal(data.message, {
+                icon: "success",
+              });
+              //Refresh payment table
+              getParticipants(participantURL+code+'/'+idcard+'/'+krapin)
+            }else{
+              swal(data.message, {
+                icon: "error",
+              });
+            }
+          });
+        } else {
+          swal("Your validations are stil pending!");
+        }
       });
     });
   });
@@ -654,6 +711,14 @@
   }
   function getParticipants(participantURL){
     $("#participant_meeting_code").text(code)
+    $('.idcard').hide();
+    $('.krapin').hide();
+    if(idcard == 1){
+      $('.idcard').show();
+    }
+    if(krapin == 1){
+      $('.krapin').show();
+    }
     $.getJSON(participantURL, function(json){
       $("#participant_tbl").find('td:last-child, th:last-child').remove();
       $("#participant_tbl").dataTable(json);

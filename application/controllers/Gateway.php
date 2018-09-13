@@ -127,7 +127,11 @@ class Gateway extends CI_Controller {
 					foreach ($response['data'] as $key => $values) {
 						$tmp_arr = array_values($values);
 						if($service == 'Meeting'){
-							array_push($tmp_arr, "<button class='btn btn-xs btn-info' data-toggle='modal' data-target='#participantModal' data-code='".$tmp_arr[0]."'> <i class='fa fa-eye'></i>Participants</button><button class='btn btn-xs btn-warning meeting-info' data-code='".$tmp_arr[0]."'> <i class='fa fa-code'></i> Instructions</button>");
+							array_push($tmp_arr, "<button class='btn btn-xs btn-info' data-toggle='modal' data-target='#participantModal'  data-idcard='".$tmp_arr[6]."' data-krapin='".$tmp_arr[9]."' data-code='".$tmp_arr[0]."'> <i class='fa fa-eye'></i>Participants</button><button class='btn btn-xs btn-warning meeting-info' data-idcard='".$tmp_arr[6]."' data-krapin='".$tmp_arr[9]."' data-code='".$tmp_arr[0]."'> <i class='fa fa-code'></i> Instructions</button>");
+							//Unset participant fields
+							unset($tmp_arr[6]);
+							unset($tmp_arr[9]);
+							$tmp_arr = array_values($tmp_arr);
 						}else if($service == 'Message'){
 							if(!$tmp_arr[0]){
 								array_push($tmp_arr, "<button class='btn btn-xs btn-info' data-toggle='modal' data-target='#recipientModal' data-code='".$tmp_arr[1]."'> <i class='fa fa-users'></i> Upload Recipients</button>");
@@ -146,7 +150,9 @@ class Gateway extends CI_Controller {
 						$responses['data'][] = $tmp_arr;
 						if($key == 0){
 							foreach (array_keys($values) as $column) {
-								$responses['columns'][]['title'] = ucwords(str_ireplace('_', ' ', $column));
+								if(!in_array($column, array('id_required', 'pin_required'))){
+									$responses['columns'][]['title'] = ucwords(str_ireplace('_', ' ', $column));
+								}
 							}
 							$responses['columns'][]['title'] = 'Options'; //Additional Options
 						}
@@ -204,7 +210,7 @@ class Gateway extends CI_Controller {
 		redirect($redirect_url);
 	}
 
-	public function get_participants($code){
+	public function get_participants($code, $has_id = 0, $has_kra = 0){
 		$participant_url = "participant?code=".$code;
 		$responses = array('data' => array(), 'destroy' => true, 'pagingType' => 'full_numbers');
 		$curl = new Curl();
@@ -215,7 +221,26 @@ class Gateway extends CI_Controller {
 			$response = json_decode($curl -> response, TRUE);
 			if($response['status'] == 'success'){
 				foreach ($response['data']  as $key => $value) {
-					$responses['data'][$key] = array($value['id'], $value['name'], $value['phone']);
+					if($has_id && !$has_kra){
+						$responses['data'][$key] = array($value['id'], $value['name'], $value['phone'], $value['id_number']);
+						$columns = array('#', 'Name', 'Phone', 'ID#');
+					}
+					if(!$has_id && $has_kra){
+						$responses['data'][$key] = array($value['id'], $value['name'], $value['phone'], $value['kra_pin'], $value['status']);
+						$columns = array('#', 'Name', 'Phone', 'KRA PIN', 'Status');
+					}
+					if($has_id && $has_kra){
+						$responses['data'][$key] = array($value['id'], $value['name'], $value['phone'], $value['id_number'], $value['kra_pin'], $value['status']);
+						$columns = array('#', 'Name', 'Phone', 'ID#', 'KRA PIN', 'Status');
+					}
+					else{
+						$responses['data'][$key] = array($value['id'], $value['name'], $value['phone']);
+						$columns = array('#', 'Name', 'Phone');
+					}
+				}
+				//Add dynamic columns
+				foreach ($columns as $column) {
+					$responses['columns'][]['title'] = $column;
 				}
 			}
 		}
@@ -813,7 +838,45 @@ class Gateway extends CI_Controller {
 		}
 		$this->session->set_flashdata($action.'_msg', $message);
 		redirect("profile");
+	}
 
+	public function validate_participant(){
+		$meeting_code = $this->input->post('meeting_code');
+		$participant_url = "participant?code=".$meeting_code;
+		$validate_url = 'check_pin';
+		$post_data = array('names' => array(), 'pins' => array(), 'meeting_code' => $meeting_code);
+
+		//Get payees
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->get($this->api_url.$participant_url);
+		if (!$curl -> error) {
+			$response = json_decode($curl -> response, TRUE);
+			if($response['status'] == 'success'){
+				foreach ($response['data']  as $key => $value) {
+					$post_data['names'][] = $value['name'];
+    				$post_data['pins'][] = $value['kra_pin'];
+				}
+			}
+		}
+
+		//Build Request
+		$curl = new Curl();
+		$curl->setHeader('Content-Type', 'Application/json');
+		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
+		$curl->post($this->api_url.$validate_url, json_encode($post_data));
+		if ($curl -> error) {
+			$message = json_encode(array('status' => 'error', 'message' => $curl -> error_message));
+		}else{
+			$response = json_decode($curl -> response, TRUE);
+			if($response['status'] == 'error'){
+				$message = json_encode(array('status' => 'error', 'message' => $response['description']));
+			}else{
+				$message = json_encode(array('status' => 'success', 'message' => $response['description']));
+			}
+		}
+		echo $message;	
 	}
 
 }

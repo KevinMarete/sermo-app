@@ -213,6 +213,7 @@ class Gateway extends CI_Controller {
 	public function get_participants($code, $has_id = 0, $has_kra = 0){
 		$participant_url = "participant?code=".$code;
 		$responses = array('data' => array(), 'destroy' => true, 'pagingType' => 'full_numbers');
+		$columns = array('#', 'Name', 'Phone', 'ID#', 'KRA PIN', 'Status');
 		$curl = new Curl();
 		$curl->setHeader('Content-Type', 'Application/json');
 		$curl->setHeader('Authorization', $this->session->userdata('user_token'));
@@ -222,26 +223,22 @@ class Gateway extends CI_Controller {
 			if($response['status'] == 'success'){
 				foreach ($response['data']  as $key => $value) {
 					if($has_id && !$has_kra){
-						$responses['data'][$key] = array($value['id'], $value['name'], $value['phone'], $value['id_number']);
-						$columns = array('#', 'Name', 'Phone', 'ID#');
+						$responses['data'][$key] = array($value['id'], $value['name'], $value['phone'], $value['id_number'], '', '');
 					}
 					if(!$has_id && $has_kra){
-						$responses['data'][$key] = array($value['id'], $value['name'], $value['phone'], $value['kra_pin'], $value['status']);
-						$columns = array('#', 'Name', 'Phone', 'KRA PIN', 'Status');
+						$responses['data'][$key] = array($value['id'], $value['name'], $value['phone'], '', $value['kra_pin'], $value['status']);
 					}
 					if($has_id && $has_kra){
 						$responses['data'][$key] = array($value['id'], $value['name'], $value['phone'], $value['id_number'], $value['kra_pin'], $value['status']);
-						$columns = array('#', 'Name', 'Phone', 'ID#', 'KRA PIN', 'Status');
 					}
 					else{
-						$responses['data'][$key] = array($value['id'], $value['name'], $value['phone']);
-						$columns = array('#', 'Name', 'Phone');
+						$responses['data'][$key] = array($value['id'], $value['name'], $value['phone'], '', '', '');
 					}
 				}
-				//Add dynamic columns
-				foreach ($columns as $column) {
-					$responses['columns'][]['title'] = $column;
-				}
+			}
+			//Add dynamic columns
+			foreach ($columns as $column) {
+				$responses['columns'][]['title'] = $column;
 			}
 		}
 		echo json_encode($responses);

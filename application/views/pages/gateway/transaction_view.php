@@ -726,7 +726,7 @@
         url: editParticipantURL,
         columns: {
             identifier: [0, 'id'],
-            editable: [[1, 'name'], [2, 'phone']]
+            editable: [[1, 'name'], [2, 'phone'], [3, 'id_number'], [4, 'kra_pin']]
         },
         buttons: {
           edit: {
